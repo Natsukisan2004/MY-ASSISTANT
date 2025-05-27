@@ -1,46 +1,158 @@
-body {
-  font-family: sans-serif;
-  padding: 20px;
-  background: #f9f9f9;
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
-h1 {
-  text-align: center;
+:root {
+    --primary-bg: #ffffff;
+    --secondary-bg: #fff8f3;
+    --border-color: #e1e1e1;
+    --text-color: #3c4043;
+    --hover-bg: #f6f6f6;
+    --shadow-color: rgba(60, 64, 67, 0.3);
+    --event-blue: #1a73e8;
+    --event-red: #d93025;
+    --event-yellow: #f9ab00;
+    --event-green: #137333;
+    --event-purple: #a142f4;
+}
+
+body {
+    font-family: 'Google Sans', Arial, sans-serif;
+    background-color: var(--secondary-bg);
+    color: var(--text-color);
+}
+
+.wrapper {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+.calendar-container {
+    background: var(--primary-bg);
+    border-radius: 16px;
+    box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.3);
+    transition: all 0.3s ease;
+    padding: 2rem;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.calendar-header button {
+    background: var(--primary-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-color);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.calendar-header button:hover {
+    background: var(--hover-bg);
+    box-shadow: 0 2px 6px var(--shadow-color);
+    transform: translateY(-1px);
+}
+
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 1rem;
 }
 
 .calendar {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 10px;
-  max-width: 700px;
-  margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
 }
 
-.day {
-  background: white;
-  border: 1px solid #ccc;
-  padding: 10px;
-  height: 100px;
-  position: relative;
+.calendar-day {
+    background: var(--primary-bg);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    position: relative;
+    min-height: 120px;
 }
 
-.day-number {
-  font-weight: bold;
+.calendar-day:hover {
+    background: var(--hover-bg);
 }
 
-.event {
-  font-size: 0.8em;
-  margin-top: 5px;
-  background: #def;
-  padding: 2px 4px;
-  border-radius: 3px;
+.current-day {
+    background-color: #e3f2fd;
+    font-weight: bold;
 }
 
-.add-btn {
-  position: absolute;
-  bottom: 5px;
-  right: 5px;
-  font-size: 0.8em;
-  cursor: pointer;
-  color: #007bff;
+/* モーダルスタイル */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* 事件樣式更新 */
+.event-item {
+    margin: 2px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: white;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background-color: var(--event-blue);
+}
+
+/* 顏色選擇器更新 */
+.color-picker {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.color-picker label {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-block;
+    margin: 0 5px;
+}
+
+.color-picker input[type="radio"] {
+    display: none;
+}
+
+.color-picker input[type="radio"]:checked + label {
+    border: 2px solid #000;
 }
