@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>Googleログイン | カレンダー</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Googleでログイン</h2>
+    <button id="googleLogin">Googleアカウントでログイン</button>
+  </div>
+
+  <script>
+    // Firebaseの構成情報（自分のFirebaseプロジェクトに置き換える）
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // 初期化
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // ログインボタン処理
+    document.getElementById("googleLogin").addEventListener("click", () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then((result) => {
+          const user = result.user;
+          localStorage.setItem("loggedInUser", user.displayName);
+          window.location.href = "calendar.html";
+        })
+        .catch((error) => {
+          console.error("ログインエラー:", error);
+          alert("ログインに失敗しました");
+        });
+    });
+  </script>
+</body>
+</html>

@@ -11,35 +11,34 @@ class Event {
     }
 }
 
-// 更新日曆創建邏輯
+// ローカル日付を 'YYYY-MM-DD' 形式でフォーマットする関数
+function formatDate(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+// カレンダー作成
 function createCalendar() {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    
-    document.getElementById('current-date').textContent = 
-        `${year}年${month + 1}月`;
+    document.getElementById('current-date').textContent = `${year}年${month + 1}月`;
 
     const calendar = document.getElementById('calendar');
-    
-    // 根據 2025/5/27 是周二來計算
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
     const startingDay = firstDay.getDay();
-    
-    // 清空日曆
-    calendar.innerHTML = '';
-    
-    // 計算上個月的天數
     const prevMonthLastDay = new Date(year, month, 0).getDate();
     
-    // 添加上個月的日期
+    calendar.innerHTML = '';
+
     for (let i = startingDay - 1; i >= 0; i--) {
         const day = prevMonthLastDay - i;
         const date = new Date(year, month - 1, day);
         addDayToCalendar(date, true);
     }
 
-    // 添加當前月份的日期
     for (let day = 1; day <= lastDay.getDate(); day++) {
         const date = new Date(year, month, day);
         addDayToCalendar(date, false);
@@ -52,9 +51,9 @@ function addDayToCalendar(date, isOtherMonth) {
     const calendar = document.getElementById('calendar');
     const dayDiv = document.createElement('div');
     dayDiv.className = `calendar-day ${isOtherMonth ? 'other-month' : ''}`;
-    dayDiv.dataset.date = date.toISOString().split('T')[0];
-    
-    if (date.toDateString() === new Date().toDateString()) {
+    dayDiv.dataset.date = formatDate(date);
+
+    if (formatDate(date) === formatDate(new Date())) {
         dayDiv.classList.add('current-day');
     }
 
@@ -72,10 +71,9 @@ function renderEvents() {
     calendarDays.forEach(day => {
         const dateStr = day.dataset.date;
         const dayEvents = events.filter(event => event.date === dateStr);
-        
         const eventsContainer = day.querySelector('.events-container');
         eventsContainer.innerHTML = '';
-        
+
         dayEvents.forEach(event => {
             const eventElement = document.createElement('div');
             eventElement.className = 'event-item';
@@ -84,31 +82,30 @@ function renderEvents() {
                 <span>${event.time}</span>
                 <span>${event.location}</span>
             `;
-            
             eventElement.addEventListener('click', (e) => {
                 e.stopPropagation();
                 showEventDetails(event);
             });
-            
             eventsContainer.appendChild(eventElement);
         });
     });
 }
 
 function showEventDetails(event) {
-    // イベント詳細表示のモーダル実装
-    // ...
+    alert(`予定の詳細:\n\n日付: ${event.date}\n時間: ${event.time}\n場所: ${event.location}\nメモ: ${event.note}`);
 }
 
-// モーダルを閉じる
-document.querySelector('.close').onclick = function() {
-    document.getElementById('eventModal').style.display = 'none';
-}
+document.querySelector('.close').onclick = function () {
+    const modal = document.getElementById('eventModal');
+    modal.classList.remove('show'); // 中央表示を解除
+};
 
-// イベント追加のフォーム送信処理
+
+
+
 document.getElementById('eventForm').onsubmit = function(e) {
     e.preventDefault();
-    
+
     const newEvent = new Event(
         document.getElementById('eventDate').value,
         document.getElementById('eventTime').value,
@@ -116,21 +113,19 @@ document.getElementById('eventForm').onsubmit = function(e) {
         document.getElementById('eventNote').value,
         document.querySelector('input[name="eventColor"]:checked').value
     );
-    
+
     events.push(newEvent);
-    
-    // モーダルを閉じるアニメーション
+
     const modal = document.getElementById('eventModal');
     modal.classList.remove('show');
     setTimeout(() => {
         modal.style.display = 'none';
     }, 300);
-    
+
     renderEvents();
     createCalendar();
 };
 
-// 月切り替えボタンの処理
 document.getElementById('prevMonth').onclick = function() {
     currentDate.setMonth(currentDate.getMonth() - 1);
     createCalendar();
@@ -141,13 +136,11 @@ document.getElementById('nextMonth').onclick = function() {
     createCalendar();
 };
 
+// ✅ 修正済み：タイムゾーンのズレを防ぐ
 function openEventModal(date) {
     const modal = document.getElementById('eventModal');
-    document.getElementById('eventDate').value = date.toISOString().split('T')[0];
-    modal.style.display = 'block';
-    setTimeout(() => {
-        modal.classList.add('show');
-    }, 10);
+    document.getElementById('eventDate').value = formatDate(date); // ローカル時間使用
+    modal.classList.add('show');
 }
 
 // 初期表示

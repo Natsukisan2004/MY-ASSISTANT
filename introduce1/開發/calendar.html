@@ -7,6 +7,17 @@
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+<script>
+    // ログインチェック
+    const user = localStorage.getItem('loggedInUser');
+    if (!user) {
+      alert('ログインしてください');
+      window.location.href = 'index.html';
+    }
+  </script>
+
+    
     <div class="wrapper">
         <div class="calendar-container">
             <div class="calendar-header">
@@ -72,6 +83,18 @@
             </div>
         </div>
     </div>
+
+    <!-- チャット機能 -->
+    <button id="chatToggle">💬 チャット</button>
+    <div id="chatWindow" class="chat-window hidden">
+        <div id="chatMessages" class="chat-messages"></div>
+        <form id="chatForm">
+            <input type="text" id="userInput" placeholder="メッセージを入力" required />
+            <button type="submit">送信</button>
+            
+        </form>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>
