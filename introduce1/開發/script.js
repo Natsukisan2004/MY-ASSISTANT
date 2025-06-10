@@ -19,10 +19,10 @@ document.getElementById("welcomeMsg").textContent = `ようこそ ${userName} �
 
 // 日付フォーマット関数
 function formatDate(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
 // カレンダー作成
@@ -98,13 +98,41 @@ function renderEvents() {
 }
 
 function showEventDetails(event) {
-  alert(`予定の詳細:\n\n日付: ${event.date}\n時間: ${event.time}\n場所: ${event.location}\nメモ: ${event.note}`);
+    const modal = document.createElement('div');
+    modal.className = 'event-detail-popup'; // CSS で見せたいならこのクラスにスタイルを用意
+
+    modal.innerHTML = `
+        <div class="event-detail-modal">
+            <p><strong>日付:</strong> ${event.date}</p>
+            <p><strong>時間:</strong> ${event.time}</p>
+            <p><strong>場所:</strong> ${event.location}</p>
+            <p><strong>メモ:</strong> ${event.note}</p>
+            <button id="deleteEventBtn">🗑 削除</button>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    document.getElementById('deleteEventBtn').onclick = () => {
+        events = events.filter(e => e !== event);
+        document.body.removeChild(modal);
+        createCalendar();
+    };
+
+  // モーダルをクリックして閉じる処理（背景クリック）
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            document.body.removeChild(modal);
+        }
+    });
 }
 
+
+
 document.querySelector('.close').onclick = function () {
-  const modal = document.getElementById('eventModal');
-  modal.classList.remove('show');
-};
+    const modal = document.getElementById('eventModal');
+    modal.classList.remove('show'); // 中央表示を解除
+};  
 
 // 🔸 Firebaseに保存
 function saveEvent(date, time, location, note, color) {
@@ -136,24 +164,27 @@ function loadEvents(callback) {
 }
 
 // フォーム送信処理
-document.getElementById('eventForm').onsubmit = function (e) {
-  e.preventDefault();
+document.getElementById('eventForm').onsubmit = function(e) {
+    e.preventDefault();
 
-  const newEvent = new Event(
-    document.getElementById('eventDate').value,
-    document.getElementById('eventTime').value,
-    document.getElementById('eventLocation').value,
-    document.getElementById('eventNote').value,
-    document.querySelector('input[name="eventColor"]:checked').value
-  );
+    const newEvent = new Event(
+        document.getElementById('eventDate').value,
+        document.getElementById('eventTime').value,
+        document.getElementById('eventLocation').value,
+        document.getElementById('eventNote').value,
+        document.querySelector('input[name="eventColor"]:checked').value
+    );
 
-  saveEvent(newEvent.date, newEvent.time, newEvent.location, newEvent.note, newEvent.color);
+    events.push(newEvent);
 
-  const modal = document.getElementById('eventModal');
-  modal.classList.remove('show');
-  setTimeout(() => {
-    modal.style.display = 'none';
-  }, 300);
+    const modal = document.getElementById('eventModal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+    }, 300);
+
+    renderEvents();
+    createCalendar();
 };
 
 // 月切替処理

@@ -4,102 +4,101 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>シンプルカレンダー</title>
-   <link rel="stylesheet" href="style.css" />
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
-  <script src="firebase-config.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
 </head>
 <body>
 
 <script>
     // ログインチェック
-    const user = localStorage.getItem('loggedInUser');
-    if (!user) {
+    if (!userUID) {
       alert('ログインしてください');
       window.location.href = 'index.html';
     }
-  </script>
+</script>
 
+<div id="welcomeMsg"></div>
+
+<div class="wrapper">
+    <div class="calendar-container">
+        <div class="calendar-header">
+            <button id="prevMonth">←</button>
+            <h2 id="current-date">2025年5月</h2>
+            <button id="nextMonth">→</button>
+        </div>
+        <div class="weekdays">
+            <div>日</div>
+            <div>月</div>
+            <div>火</div>
+            <div>水</div>
+            <div>木</div>
+            <div>金</div>
+            <div>土</div>
+        </div>
+        <div id="calendar" class="calendar"></div>
+    </div>
     
-    <div class="wrapper">
-        <div class="calendar-container">
-            <div class="calendar-header">
-                <button id="prevMonth">←</button>
-                <h2 id="current-date">2025年5月</h2>
-                <button id="nextMonth">→</button>
-            </div>
-            <div class="weekdays">
-                <div>日</div>
-                <div>月</div>
-                <div>火</div>
-                <div>水</div>
-                <div>木</div>
-                <div>金</div>
-                <div>土</div>
-            </div>
-            <div id="calendar" class="calendar"></div>
-        </div>
-        
-        <!-- 事件添加モーダル -->
-        <div id="eventModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h3>予定を追加</h3>
-                <form id="eventForm">
-                    <div class="form-group">
-                        <label>日付:</label>
-                        <input type="date" id="eventDate" required>
+    <!-- 事件添加モーダル -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>予定を追加</h3>
+            <form id="eventForm">
+                <div class="form-group">
+                    <label>日付:</label>
+                    <input type="date" id="eventDate" required>
+                </div>
+                <div class="form-group">
+                    <label>時間:</label>
+                    <input type="time" id="eventTime" required>
+                </div>
+                <div class="form-group">
+                    <label>場所:</label>
+                    <input type="text" id="eventLocation" required>
+                </div>
+                <div class="form-group">
+                    <label>メモ:</label>
+                    <textarea id="eventNote"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>カラー:</label>
+                    <div class="color-picker">
+                        <input type="radio" name="eventColor" value="#1a73e8" id="color1" checked>
+                        <label for="color1" style="background-color: #1a73e8"></label>
+                        
+                        <input type="radio" name="eventColor" value="#d93025" id="color2">
+                        <label for="color2" style="background-color: #d93025"></label>
+                        
+                        <input type="radio" name="eventColor" value="#f9ab00" id="color3">
+                        <label for="color3" style="background-color: #f9ab00"></label>
+                        
+                        <input type="radio" name="eventColor" value="#137333" id="color4">
+                        <label for="color4" style="background-color: #137333"></label>
+                        
+                        <input type="radio" name="eventColor" value="#a142f4" id="color5">
+                        <label for="color5" style="background-color: #a142f4"></label>
                     </div>
-                    <div class="form-group">
-                        <label>時間:</label>
-                        <input type="time" id="eventTime" required>
-                    </div>
-                    <div class="form-group">
-                        <label>場所:</label>
-                        <input type="text" id="eventLocation" required>
-                    </div>
-                    <div class="form-group">
-                        <label>メモ:</label>
-                        <textarea id="eventNote"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>カラー:</label>
-                        <div class="color-picker">
-                            <input type="radio" name="eventColor" value="#1a73e8" id="color1" checked>
-                            <label for="color1" style="background-color: #1a73e8"></label>
-                            
-                            <input type="radio" name="eventColor" value="#d93025" id="color2">
-                            <label for="color2" style="background-color: #d93025"></label>
-                            
-                            <input type="radio" name="eventColor" value="#f9ab00" id="color3">
-                            <label for="color3" style="background-color: #f9ab00"></label>
-                            
-                            <input type="radio" name="eventColor" value="#137333" id="color4">
-                            <label for="color4" style="background-color: #137333"></label>
-                            
-                            <input type="radio" name="eventColor" value="#a142f4" id="color5">
-                            <label for="color5" style="background-color: #a142f4"></label>
-                        </div>
-                    </div>
-                    <button type="submit">保存</button>
-                </form>
-            </div>
+                </div>
+                <button type="submit">保存</button>
+            </form>
+            <button id="deleteEventBtn" style="display:none;">削除</button>
         </div>
     </div>
+</div>
 
-    <!-- チャット機能 -->
-    <button id="chatToggle">💬 チャット</button>
-    <div id="chatWindow" class="chat-window hidden">
-        <div id="chatMessages" class="chat-messages"></div>
-        <form id="chatForm">
-            <input type="text" id="userInput" placeholder="メッセージを入力" required />
-            <button type="submit">送信</button>
-            
-        </form>
-    </div>
+<!-- チャット機能 -->
+<button id="chatToggle">💬 チャット</button>
+<div id="chatWindow" class="chat-window hidden">
+    <div id="chatMessages" class="chat-messages"></div>
+    <form id="chatForm">
+        <input type="text" id="userInput" placeholder="メッセージを入力" required />
+        <button type="submit">送信</button>
+    </form>
+</div>
 
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
-
