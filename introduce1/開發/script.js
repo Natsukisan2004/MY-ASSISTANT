@@ -86,7 +86,7 @@ function renderEvents() {
       eventElement.style.backgroundColor = event.color;
       eventElement.innerHTML = `
         <span>${event.time}</span>
-        <span>${event.location}</span>
+        <span>${event.note}</span>
       `;
       eventElement.addEventListener('click', (e) => {
         e.stopPropagation();
