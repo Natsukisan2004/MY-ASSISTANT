@@ -208,3 +208,22 @@ function openEventModal(date) {
 loadEvents(() => {
   createCalendar();
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+  const chatToggle = document.getElementById('chatToggle');
+  const chatWindow = document.getElementById('chatWindow');
+  const chatClose = document.getElementById('chatClose');
+
+  // チャットウィンドウの表示切替
+  chatToggle.addEventListener('click', () => {
+    chatWindow.classList.toggle('hidden');
+  });
+
+  // チャットウィンドウを閉じる
+  chatClose.addEventListener('click', () => {
+    chatWindow.classList.add('hidden');
+  });
+});
+
+
+

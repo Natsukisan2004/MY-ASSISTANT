@@ -89,14 +89,22 @@
     </div>
 </div>
 
-<!-- チャット機能 -->
+<!-- チャットボタン -->
 <button id="chatToggle">💬 チャット</button>
+
+<!-- チャットポップアップ -->
 <div id="chatWindow" class="chat-window hidden">
-    <div id="chatMessages" class="chat-messages"></div>
-    <form id="chatForm">
-        <input type="text" id="userInput" placeholder="メッセージを入力" required />
-        <button type="submit">送信</button>
-    </form>
+  <div class="chat-header">
+    <span>チャット</span>
+    <button id="chatClose" class="chat-close">×</button>
+  </div>
+  <div class="chat-body">
+    <p>ここにチャットメッセージが表示されます（仮）</p>
+  </div>
+  <div class="chat-footer">
+    <input type="text" placeholder="メッセージを入力..." disabled />
+    <button disabled>送信</button>
+  </div>
 </div>
 
 <script src="script.js"></script>
