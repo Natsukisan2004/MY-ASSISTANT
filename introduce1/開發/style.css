@@ -229,3 +229,26 @@ body {
     z-index: 1000;
     box-shadow: 0 0 10px rgba(0,0,0,0.3);
 }
+
+/* 曜日別カラーリング */
+.calendar-day.sunday {
+    background-color: #ffeaea;
+}
+.calendar-day.monday {
+    background-color: #e8f0fe;
+}
+.calendar-day.tuesday {
+    background-color: #e6f4ea;
+}
+.calendar-day.wednesday {
+    background-color: #fff8e1;
+}
+.calendar-day.thursday {
+    background-color: #f3e8fd;
+}
+.calendar-day.friday {
+    background-color: #e0f7fa;
+}
+.calendar-day.saturday {
+    background-color: #e1f5fe;
+}

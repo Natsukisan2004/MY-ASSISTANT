@@ -23,7 +23,7 @@
       auth.signInWithPopup(provider)
         .then((result) => {
           const user = result.user;
-          localStorage.setItem("userUID", user.uid);
+          localStorage.setItem("userUId", user.uid);
           localStorage.setItem("userName", user.displayName);
           window.location.href = "calendar.html";
         })

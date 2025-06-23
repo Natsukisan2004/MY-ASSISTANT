@@ -1,9 +1,12 @@
-let currentDate = new Date(2025, 4, 27); // 初期表示 2025年5月27日
-let events = [];
+let currentDate = new Date(); // 初期表示は現在日付
+const userName = localStorage.getItem("userName");
+const userUId = localStorage.getItem("userUId"); 
+document.getElementById("welcomeMsg").textContent = `ようこそ ${userName} さん`;
 
 class Event {
-  constructor(date, time, location, note, color) {
-    this.date = date;
+  constructor(startDate, endDate, time, location, note, color) {
+    this.startDate = startDate;
+    this.endDate = endDate;
     this.time = time;
     this.location = location;
     this.note = note;
@@ -11,18 +14,14 @@ class Event {
   }
 }
 
-// Firebase初期化済み前提（firebase-config.jsで）
-const db = firebase.firestore();
-const userUID = localStorage.getItem("userUID");
-const userName = localStorage.getItem("userName");
-document.getElementById("welcomeMsg").textContent = `ようこそ ${userName} さん`;
+const events = []; // イベント配列を初期化
 
 // 日付フォーマット関数
 function formatDate(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 // カレンダー作成
@@ -56,7 +55,11 @@ function createCalendar() {
 function addDayToCalendar(date, isOtherMonth) {
   const calendar = document.getElementById('calendar');
   const dayDiv = document.createElement('div');
-  dayDiv.className = `calendar-day ${isOtherMonth ? 'other-month' : ''}`;
+  const dayOfWeekClass = [
+    "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"
+  ];
+  const dow = date.getDay(); // 0:日, 1:月, ...
+  dayDiv.className = `calendar-day ${dayOfWeekClass[dow]} ${isOtherMonth ? 'other-month' : ''}`;
   dayDiv.dataset.date = formatDate(date);
 
   if (formatDate(date) === formatDate(new Date())) {
@@ -76,9 +79,15 @@ function renderEvents() {
   const calendarDays = document.querySelectorAll('.calendar-day');
   calendarDays.forEach(day => {
     const dateStr = day.dataset.date;
-    const dayEvents = events.filter(event => event.date === dateStr);
     const eventsContainer = day.querySelector('.events-container');
     eventsContainer.innerHTML = '';
+
+    const dayEvents = events.filter(event => {
+      const start = new Date(event.startDate);
+      const end = new Date(event.endDate || event.startDate);
+      const current = new Date(dateStr);
+      return current >= start && current <= end;
+    });
 
     dayEvents.forEach(event => {
       const eventElement = document.createElement('div');
@@ -98,93 +107,81 @@ function renderEvents() {
 }
 
 function showEventDetails(event) {
-    const modal = document.createElement('div');
-    modal.className = 'event-detail-popup'; // CSS で見せたいならこのクラスにスタイルを用意
+  const modal = document.createElement('div');
+  modal.className = 'event-detail-popup';
+  modal.innerHTML = `
+    <div class="event-detail-modal">
+      <p><strong>開始日:</strong> ${event.startDate}</p>
+      <p><strong>終了日:</strong> ${event.endDate || event.startDate}</p>
+      <p><strong>時間:</strong> ${event.time}</p>
+      <p><strong>場所:</strong> ${event.location}</p>
+      <p><strong>メモ:</strong> ${event.note}</p>
+      <button id="deleteEventBtn">🗑 削除</button>
+    </div>
+  `;
 
-    modal.innerHTML = `
-        <div class="event-detail-modal">
-            <p><strong>日付:</strong> ${event.date}</p>
-            <p><strong>時間:</strong> ${event.time}</p>
-            <p><strong>場所:</strong> ${event.location}</p>
-            <p><strong>メモ:</strong> ${event.note}</p>
-            <button id="deleteEventBtn">🗑 削除</button>
-        </div>
-    `;
+  document.body.appendChild(modal);
 
-    document.body.appendChild(modal);
+  document.getElementById('deleteEventBtn').onclick = () => {
+    deleteEvent(event);
+    document.body.removeChild(modal);
+    createCalendar();
+  };
 
-    document.getElementById('deleteEventBtn').onclick = () => {
-        events = events.filter(e => e !== event);
-        document.body.removeChild(modal);
-        createCalendar();
-    };
-
-  // モーダルをクリックして閉じる処理（背景クリック）
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            document.body.removeChild(modal);
-        }
-    });
-}
-
-
-
-document.querySelector('.close').onclick = function () {
-    const modal = document.getElementById('eventModal');
-    modal.classList.remove('show'); // 中央表示を解除
-};  
-
-// 🔸 Firebaseに保存
-function saveEvent(date, time, location, note, color) {
-  db.collection("users").doc(userUID).collection("events").add({
-    date,
-    time,
-    location,
-    note,
-    color,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
-    loadEvents(() => {
-      renderEvents();
-      createCalendar();
-    });
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
   });
 }
 
-// 🔸 Firebaseから取得
-function loadEvents(callback) {
-  db.collection("users").doc(userUID).collection("events")
-    .orderBy("date")
+function saveEvent(userUId, event) {
+  const db = firebase.firestore();
+  db.collection("users")
+    .doc(userUId)
+    .collection("events")
+    .add(JSON.parse(JSON.stringify(event)))
+    .then(() => {
+      console.log("イベント保存成功");
+    })
+    .catch((error) => {
+      console.error("イベント保存失敗:", error);
+    });
+}
+
+function loadEvents(userUId, callback) {
+  const db = firebase.firestore();
+  db.collection("users")
+    .doc(userUId)
+    .collection("events")
     .get()
-    .then(snapshot => {
-      events = [];
-      snapshot.forEach(doc => events.push({ id: doc.id, ...doc.data() }));
-      callback();
+    .then((querySnapshot) => {
+      const loadedEvents = [];
+      querySnapshot.forEach((doc) => {
+        loadedEvents.push(doc.data());
+      });
+      callback(loadedEvents);
+    })
+    .catch((error) => {
+      console.error("イベント読み込み失敗:", error);
     });
 }
 
 // フォーム送信処理
 document.getElementById('eventForm').onsubmit = function(e) {
-    e.preventDefault();
-
-    const newEvent = new Event(
-        document.getElementById('eventDate').value,
-        document.getElementById('eventTime').value,
-        document.getElementById('eventLocation').value,
-        document.getElementById('eventNote').value,
-        document.querySelector('input[name="eventColor"]:checked').value
-    );
-
-    events.push(newEvent);
-
-    const modal = document.getElementById('eventModal');
-    modal.classList.remove('show');
-    setTimeout(() => {
-        modal.style.display = 'none';
-    }, 300);
-
-    renderEvents();
-    createCalendar();
+  e.preventDefault();
+  const newEvent = new Event(
+    document.getElementById('eventDate').value,
+    document.getElementById('eventEndDate').value,
+    document.getElementById('eventTime').value,
+    document.getElementById('eventLocation').value,
+    document.getElementById('eventNote').value,
+    document.querySelector('input[name="eventColor"]:checked').value
+  );
+  events.push(newEvent);
+  saveEvent(userUId, newEvent);
+  createCalendar();
+  document.getElementById('eventModal').classList.remove('show');
 };
 
 // 月切替処理
@@ -204,7 +201,17 @@ function openEventModal(date) {
   modal.classList.add('show');
 }
 
-// 🔸 初期読み込み：Firestoreから取得 → カレンダー生成
-loadEvents(() => {
-  createCalendar();
+// 初期読み込み
+document.addEventListener("DOMContentLoaded", () => {
+  const userUId = localStorage.getItem("userUId");
+  if (!userUId) {
+    console.error("userUId が見つかりません");
+    return;
+  }
+
+  loadEvents(userUId, (loadedEvents) => {
+    events.length = 0;
+    events.push(...loadedEvents);
+    createCalendar();
+  });
 });
