@@ -1,7 +1,6 @@
 let currentDate = new Date(); // 初期表示は現在日付
 const userName = localStorage.getItem("userName");
 const userUId = localStorage.getItem("userUId"); 
-document.getElementById("welcomeMsg").textContent = `ようこそ ${userName} さん`;
 
 class Event {
   constructor(startDate, endDate, time, location, note, color) {
@@ -203,15 +202,20 @@ function openEventModal(date) {
 
 // 初期読み込み
 document.addEventListener("DOMContentLoaded", () => {
-  const userUId = localStorage.getItem("userUId");
-  if (!userUId) {
-    console.error("userUId が見つかりません");
-    return;
-  }
+  firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+      const userUId = user.uid;
+      const userName = user.displayName;
+      document.getElementById("welcomeMsg").textContent = `ようこそ ${userName} さん`;
 
-  loadEvents(userUId, (loadedEvents) => {
-    events.length = 0;
-    events.push(...loadedEvents);
-    createCalendar();
+      loadEvents(userUId, (loadedEvents) => {
+        events.length = 0;
+        events.push(...loadedEvents);
+        createCalendar();
+      });
+    } else {
+      console.error("ユーザーがログインしていません");
+      window.location.href = "login.html"; // ログインページに戻す
+    }
   });
 });
