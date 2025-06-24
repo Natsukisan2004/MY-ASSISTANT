@@ -232,25 +232,25 @@ body {
 
 /* 曜日別カラーリング */
 .calendar-day.sunday {
-    background-color: #ffeaea;
+    background-color: #f8fafe;
 }
 .calendar-day.monday {
-    background-color: #e8f0fe;
+    background-color: #f1f6fe;
 }
 .calendar-day.tuesday {
-    background-color: #e6f4ea;
+    background-color: #ebf3ff;
 }
 .calendar-day.wednesday {
-    background-color: #fff8e1;
+    background-color: #e2edff;
 }
 .calendar-day.thursday {
-    background-color: #f3e8fd;
+    background-color: #dbe9ff;
 }
 .calendar-day.friday {
-    background-color: #e0f7fa;
+    background-color: #d7e7ff;
 }
 .calendar-day.saturday {
-    background-color: #e1f5fe;
+    background-color: #d0e3ff;
 }
 /* モーダル非表示時 */
 .modal {
