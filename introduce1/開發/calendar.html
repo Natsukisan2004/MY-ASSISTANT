@@ -112,6 +112,20 @@
     if (idx !== -1) events.splice(idx, 1);
 
   }
+  // 既存の deleteEvent 関数のあと、ここに追加👇
+  // 「×」ボタンでモーダルを閉じる
+  document.querySelector('.modal .close').addEventListener('click', () => {
+    document.getElementById('eventModal').classList.remove('show');
+  });
+
+  // モーダルの外側クリックでも閉じられるように
+  document.getElementById('eventModal').addEventListener('click', (e) => {
+    if (e.target.id === 'eventModal') {
+      document.getElementById('eventModal').classList.remove('show');
+    }
+  });
+</script>
+
 </script>
 </body>
 </html>

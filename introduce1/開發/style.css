@@ -252,3 +252,40 @@ body {
 .calendar-day.saturday {
     background-color: #e1f5fe;
 }
+/* モーダル非表示時 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* .show がついたら表示 */
+  .modal.show {
+    display: flex;
+  }
+  
+  /* モーダルの中身のスタイル */
+  .modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+  }
+  
+  /* × ボタンのスタイル */
+  .modal .close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+  }
+  
