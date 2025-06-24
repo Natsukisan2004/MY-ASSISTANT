@@ -61,14 +61,24 @@ function addDayToCalendar(date, isOtherMonth) {
   dayDiv.className = `calendar-day ${dayOfWeekClass[dow]} ${isOtherMonth ? 'other-month' : ''}`;
   dayDiv.dataset.date = formatDate(date);
 
-  if (formatDate(date) === formatDate(new Date())) {
-    dayDiv.classList.add('current-day');
+  // 判斷今天（根據用戶時區）
+  const now = new Date();
+  if (
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth() &&
+    date.getDate() === now.getDate() &&
+    !isOtherMonth
+  ) {
+    dayDiv.innerHTML = `
+      <div class="day-number today-circle">${date.getDate()}</div>
+      <div class="events-container"></div>
+    `;
+  } else {
+    dayDiv.innerHTML = `
+      <div class="day-number">${date.getDate()}</div>
+      <div class="events-container"></div>
+    `;
   }
-
-  dayDiv.innerHTML = `
-    <div class="day-number">${date.getDate()}</div>
-    <div class="events-container"></div>
-  `;
 
   dayDiv.addEventListener('click', () => openEventModal(date));
   calendar.appendChild(dayDiv);

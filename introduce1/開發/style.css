@@ -289,3 +289,18 @@ body {
     cursor: pointer;
   }
   
+  /* ...existing code... */
+.today-circle {
+  display: inline-block;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  border-radius: 50%;
+  background: none;
+  border: 2px solid #1a73e8;
+  color: #1a73e8;
+  font-weight: bold;
+  text-align: center;
+  box-sizing: border-box;
+}
+/* ...existing code... */
