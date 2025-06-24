@@ -144,6 +144,46 @@ function showEventDetails(event) {
   });
 }
 
+function showEventConfirm(eventObj) {
+  const modal = document.createElement('div');
+  modal.className = 'event-detail-popup';
+  modal.innerHTML = `
+    <div class="event-detail-modal">
+      <h3>このイベントを追加しますか？</h3>
+      <p><strong>開始日:</strong> ${eventObj.startDate}</p>
+      <p><strong>終了日:</strong> ${eventObj.endDate || eventObj.startDate}</p>
+      <p><strong>時間:</strong> ${eventObj.time}</p>
+      <p><strong>場所:</strong> ${eventObj.location}</p>
+      <p><strong>メモ:</strong> ${eventObj.note}</p>
+      <button id="confirmAddEventBtn">追加</button>
+      <button id="cancelAddEventBtn">キャンセル</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  document.getElementById('confirmAddEventBtn').onclick = () => {
+    const newEvent = new Event(
+      eventObj.startDate,
+      eventObj.endDate,
+      eventObj.time,
+      eventObj.location,
+      eventObj.note,
+      "#1a73e8"
+    );
+    events.push(newEvent);
+    saveEvent(userUId, newEvent);
+    createCalendar();
+    document.body.removeChild(modal);
+    alert("イベントを追加しました！");
+  };
+  document.getElementById('cancelAddEventBtn').onclick = () => {
+    document.body.removeChild(modal);
+  };
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) document.body.removeChild(modal);
+  });
+}
+
 function saveEvent(userUId, event) {
   const db = firebase.firestore();
   db.collection("users")
@@ -228,4 +268,133 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "login.html"; // ログインページに戻す
     }
   });
+
+  // チャットウィンドウの表示/非表示切り替え
+  const chatToggle = document.getElementById('chatToggle');
+  const chatWindow = document.getElementById('chatWindow');
+  if (chatToggle && chatWindow) {
+    chatToggle.addEventListener('click', () => {
+      chatWindow.classList.toggle('hidden');
+    });
+  }
+
+  // 音声入力
+  const micBtn = document.getElementById('micBtn');
+  let recognition;
+  if ('webkitSpeechRecognition' in window) {
+    recognition = new webkitSpeechRecognition();
+    recognition.lang = 'ja-JP';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    micBtn.addEventListener('click', () => {
+      recognition.start();
+      micBtn.disabled = true;
+      micBtn.textContent = '🎤...';
+    });
+
+    recognition.onresult = function(event) {
+      const transcript = event.results[0][0].transcript;
+      document.getElementById('userInput').value = transcript; // 只填充，不自動發送
+    };
+    recognition.onend = function() {
+      micBtn.disabled = false;
+      micBtn.textContent = '🎤';
+    };
+    recognition.onerror = function() {
+      micBtn.disabled = false;
+      micBtn.textContent = '🎤';
+    };
+  } else {
+    micBtn.disabled = true;
+    micBtn.title = "このブラウザは音声認識に対応していません";
+  }
+
+  // API設定ウィンドウ
+  const apiSettingModal = document.getElementById('apiSettingModal');
+  const openApiSetting = document.getElementById('openApiSetting');
+  const closeApiSetting = document.getElementById('closeApiSetting');
+  const apiSettingForm = document.getElementById('apiSettingForm');
+  const apiUrlInput = document.getElementById('apiUrlInput');
+  const apiKeyInput = document.getElementById('apiKeyInput');
+
+  // 打開設定
+  openApiSetting.onclick = () => {
+    apiUrlInput.value = localStorage.getItem('openai_api_url') || 'https://api.openai.com/v1/chat/completions';
+    apiKeyInput.value = localStorage.getItem('openai_api_key') || '';
+    apiSettingModal.classList.add('show');
+  };
+  // 關閉設定
+  closeApiSetting.onclick = () => apiSettingModal.classList.remove('show');
+  apiSettingModal.onclick = (e) => { if (e.target === apiSettingModal) apiSettingModal.classList.remove('show'); };
+
+  // 保存設定
+  apiSettingForm.onsubmit = (e) => {
+    e.preventDefault();
+    localStorage.setItem('openai_api_url', apiUrlInput.value);
+    localStorage.setItem('openai_api_key', apiKeyInput.value);
+    alert('API設定を保存しました');
+    apiSettingModal.classList.remove('show');
+  };
+
+  // チャット送信＆AI事件生成
+  const chatForm = document.getElementById('chatForm');
+  const userInput = document.getElementById('userInput');
+  const chatMessages = document.getElementById('chatMessages');
+
+  if (chatForm && userInput && chatMessages) {
+    chatForm.onsubmit = function(e) {
+      e.preventDefault();
+      const text = userInput.value.trim();
+      if (!text) return;
+
+      // 顯示用戶訊息
+      const userMsg = document.createElement('div');
+      userMsg.textContent = "👤 " + text;
+      chatMessages.appendChild(userMsg);
+
+      // 發送給AI
+      const apiUrl = localStorage.getItem('openai_api_url') || 'https://api.openai.com/v1/chat/completions';
+      const apiKey = localStorage.getItem('openai_api_key') || '';
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + apiKey
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: '今日は${todayStr}です。ユーザーが話した内容からカレンダーイベントを抽出し、JSONで返してください。例: {"startDate":"2025-06-25","endDate":"2025-06-25","time":"14:00","location":"渋谷","note":"打ち合わせ"}'
+            },
+            {
+              role: 'user',
+              content: text
+            }
+          ]
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const content = data.choices[0].message.content;
+        let eventObj;
+        try {
+          eventObj = JSON.parse(content);
+        } catch {
+          alert("AIの返答を解析できません: " + content);
+          return;
+        }
+        // 顯示事件確認視窗
+        showEventConfirm(eventObj);
+      })
+      .catch(err => {
+        alert("AIエラー: " + err.message);
+      });
+
+      userInput.value = '';
+    };
+  }
 });
+

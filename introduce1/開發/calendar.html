@@ -100,9 +100,30 @@
     <div id="chatMessages" class="chat-messages"></div>
     <form id="chatForm">
         <input type="text" id="userInput" placeholder="メッセージを入力" required />
+        <button type="button" id="micBtn" title="音声入力" style="margin-right:5px;">🎤</button>
         <button type="submit">送信</button>
     </form>
 </div>
+
+<!-- API設定モーダル -->
+<div id="apiSettingModal" class="modal">
+  <div class="modal-content">
+    <span class="close" id="closeApiSetting">&times;</span>
+    <h3>OpenAI API設定</h3>
+    <form id="apiSettingForm">
+      <div class="form-group">
+        <label>API URL</label>
+        <input type="text" id="apiUrlInput" placeholder="https://api.openai.com/v1/chat/completions" required>
+      </div>
+      <div class="form-group">
+        <label>API Key</label>
+        <input type="password" id="apiKeyInput" placeholder="sk-..." required>
+      </div>
+      <button type="submit">保存</button>
+    </form>
+  </div>
+</div>
+<button id="openApiSetting" style="position:fixed;bottom:20px;left:20px;z-index:1001;">API設定</button>
 
 <script type="module" src="script.js"></script>
 <script>
