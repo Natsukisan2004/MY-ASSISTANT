@@ -303,4 +303,89 @@ body {
   text-align: center;
   box-sizing: border-box;
 }
+
 /* ...existing code... */
+.main-header {
+  background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80');
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  padding: 2.5rem 0 1rem 0;
+  text-align: center;
+  position: relative;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(60,64,67,0.15);
+  transition: background-image 0.3s;
+}
+.main-header h1 {
+  margin: 0;
+  font-size: 2.2rem;
+  text-shadow: 0 2px 8px #0008;
+  letter-spacing: 0.1em;
+}
+.main-header nav {
+  margin-top: 10px;
+}
+.main-header .nav-link {
+  color: #fff;
+  padding: 6px 18px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background 0.2s, color 0.2s;
+  background: transparent;
+}
+.main-header .nav-link.active,
+.main-header .nav-link:hover {
+  background: #ffe082;
+  color: #333;
+  text-decoration: none;
+}
+.header-img-btn {
+  margin-left: 8px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #fff3;
+  color: #fff;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.2s, color 0.2s;
+}
+.header-img-btn:hover {
+  background: #fff6;
+  color: #333;
+}
+.lang-select {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid #fff;
+  background: #fff3;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.2s, color 0.2s;
+}
+.lang-select:focus {
+  background: #fff6;
+  color: #333;
+}
+.global-nav {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+.nav-list {
+  display: flex;
+  gap: 16px;
+  list-style: none;
+  align-items: center;
+  padding: 0;
+  margin: 0;
+}
+.nav-list li {
+  display: flex;
+  align-items: center;
+}

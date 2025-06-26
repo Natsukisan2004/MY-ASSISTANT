@@ -11,6 +11,28 @@
     <script src="firebase-config.js"></script>
 </head>
 <body>
+<!-- ▼▼▼ ヘッダー＆ナビゲーション追加ここから ▼▼▼ -->
+<header id="mainHeader" class="main-header">
+  <h1>マイカレンダー</h1>
+  <nav class="global-nav">
+    <ul class="nav-list">
+      <li><a href="calendar.html" class="nav-link active" id="navCalendar">カレンダー</a></li>
+      <li><a href="profile.html" class="nav-link" id="navProfile">プロフィール</a></li>
+      <li><a href="settings.html" class="nav-link" id="navSettings">設定</a></li>
+      <li>
+        <select id="langSelect" class="lang-select">
+          <option value="ja">日本語</option>
+          <option value="ru">Русский</option>
+        </select>
+      </li>
+      <li>
+        <button id="changeHeaderImgBtn" class="header-img-btn">ヘッダー画像変更</button>
+        <input type="file" id="headerImgInput" accept="image/*" style="display:none;">
+      </li>
+    </ul>
+  </nav>
+</header>
+<!-- ▲▲▲ ヘッダー＆ナビゲーション追加ここまで ▲▲▲ -->
 
 <script>
     const userUId = localStorage.getItem("userUId");
@@ -146,7 +168,99 @@
     }
   });
 </script>
+<script>
+  // ヘッダー画像変更機能
+  document.addEventListener('DOMContentLoaded', () => {
+    const changeHeaderImgBtn = document.getElementById('changeHeaderImgBtn');
+    const headerImgInput = document.getElementById('headerImgInput');
+    const mainHeader = document.getElementById('mainHeader');
 
+    // 保存画像があれば適用
+    const savedImg = localStorage.getItem('headerBgImg');
+    if (savedImg && mainHeader) {
+      mainHeader.style.backgroundImage = `url('${savedImg}')`;
+    }
+
+    if (changeHeaderImgBtn && headerImgInput && mainHeader) {
+      changeHeaderImgBtn.addEventListener('click', () => {
+        headerImgInput.click();
+      });
+      headerImgInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          mainHeader.style.backgroundImage = `url('${ev.target.result}')`;
+          localStorage.setItem('headerBgImg', ev.target.result);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  });
+</script>
+<script>
+  // 言語設定機能
+  document.addEventListener('DOMContentLoaded', () => {
+    const langSelect = document.getElementById('langSelect');
+    // 保存された言語を適用
+    const savedLang = localStorage.getItem('calendarLang') || 'ja';
+    langSelect.value = savedLang;
+
+    // UIテキスト
+    const texts = {
+      ja: {
+        calendar: 'カレンダー',
+        profile: 'プロフィール',
+        settings: '設定',
+        changeHeader: 'ヘッダー画像変更',
+        chat: '💬 チャット',
+        apiSetting: 'API設定',
+        addEvent: '予定を追加',
+        save: '保存',
+        delete: '削除',
+        welcome: 'ようこそ'
+      },
+      ru: {
+        calendar: 'Календарь',
+        profile: 'Профиль',
+        settings: 'Настройки',
+        changeHeader: 'Изменить изображение шапки',
+        chat: '💬 Чат',
+        apiSetting: 'Настройки API',
+        addEvent: 'Добавить событие',
+        save: 'Сохранить',
+        delete: 'Удалить',
+        welcome: 'Добро пожаловать'
+      }
+    };
+
+    function applyLang(lang) {
+      document.querySelector('a[href="calendar.html"]').textContent = texts[lang].calendar;
+      document.querySelector('a[href="profile.html"]').textContent = texts[lang].profile;
+      document.querySelector('a[href="settings.html"]').textContent = texts[lang].settings;
+      document.getElementById('changeHeaderImgBtn').textContent = texts[lang].changeHeader;
+      document.getElementById('chatToggle').textContent = texts[lang].chat;
+      document.getElementById('openApiSetting').textContent = texts[lang].apiSetting;
+      document.querySelector('#eventModal h3').textContent = texts[lang].addEvent;
+      document.querySelector('#eventForm button[type="submit"]').textContent = texts[lang].save;
+      document.getElementById('deleteEventBtn').textContent = texts[lang].delete;
+      // ウェルカムメッセージ
+      const userName = localStorage.getItem("userName") || "";
+      document.getElementById("welcomeMsg").textContent = `${texts[lang].welcome} ${userName} さん`;
+    }
+
+    // 初期適用
+    applyLang(savedLang);
+
+    // 言語変更時
+    langSelect.addEventListener('change', (e) => {
+      const lang = e.target.value;
+      localStorage.setItem('calendarLang', lang);
+      applyLang(lang);
+    });
+  });
+
+  // ...既存のコード...
 </script>
 </body>
 </html>
