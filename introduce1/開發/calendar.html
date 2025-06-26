@@ -11,6 +11,30 @@
     <script src="firebase-config.js"></script>
 </head>
 <body>
+<!-- ▼▼▼ ヘッダー＆ナビゲーション追加ここから ▼▼▼ -->
+<header id="mainHeader" class="main-header">
+  <h1>マイカレンダー</h1>
+  <nav class="global-nav">
+    <ul class="nav-list">
+      <li><a href="calendar.html" class="nav-link active" id="navCalendar">カレンダー</a></li>
+      <li><a href="profile.html" class="nav-link" id="navProfile">プロフィール</a></li>
+      <li><a href="settings.html" class="nav-link" id="navSettings">設定</a></li>
+      <li>
+        <select id="langSelect" class="lang-select">
+          <option value="ja">日本語</option>
+          <option value="ru">Русский</option>
+          <option value="en">English</option>
+          <option value="zh">中文</option>
+        </select>
+      </li>
+      <li>
+        <button id="changeHeaderImgBtn" class="header-img-btn">ヘッダー画像変更</button>
+        <input type="file" id="headerImgInput" accept="image/*" style="display:none;">
+      </li>
+    </ul>
+  </nav>
+</header>
+<!-- ▲▲▲ ヘッダー＆ナビゲーション追加ここまで ▲▲▲ -->
 
 <!-- ▼▼▼ ヘッダー＆ナビゲーション追加ここから ▼▼▼ -->
 <header id="mainHeader" class="main-header">
