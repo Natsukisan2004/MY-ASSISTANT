@@ -21,23 +21,61 @@
       <li><a href="calendar.html" class="nav-link active" id="navCalendar">カレンダー</a></li>
       <li><a href="profile.html" class="nav-link" id="navProfile">プロフィール</a></li>
       <li><a href="settings.html" class="nav-link" id="navSettings">設定</a></li>
-      <li>
-        <select id="langSelect" class="lang-select">
-          <option value="ja">日本語</option>
-          <option value="ru">Русский</option>
-          <option value="en">English</option>
-          <option value="zh">中文</option>
-        </select>
-      </li>
-      <li>
-        <button id="changeHeaderImgBtn" class="header-img-btn">ヘッダー画像変更</button>
-        <input type="file" id="headerImgInput" accept="image/*" style="display:none;">
-      </li>
+
     </ul>
   </nav>
+  
 </header>
 
 <font size="10">⚠️工事中⚠️</font>
+
+<!-- 設定用のオプションをまとめるセクション -->
+<footer class="settings-footer">
+  <div class="lang-setting">
+    <label for="langSelect">言語設定:</label>
+    <select id="langSelect" class="lang-select">
+      <option value="ja">日本語</option>
+      <option value="ru">Русский</option>
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+    </select>
+  </div>
+
+  <div class="header-img-setting" style="margin-top: 10px;">
+    <button id="changeHeaderImgBtn" class="header-img-btn">ヘッダー画像変更</button>
+    <input type="file" id="headerImgInput" accept="image/*" style="display:none;">
+  </div>
+
+<section class="feedback-section">
+  <h3>グラフィック品質</h3>
+  <form id="moodForm">
+    <div class="mood-buttons">
+      <input type="radio" name="mood" value="great" id="mood1">
+      <label for="mood1">すごく良い</label><br>
+
+      <input type="radio" name="mood" value="good" id="mood2">
+      <label for="mood2">良い</label><br>
+
+      <input type="radio" name="mood" value="normal" id="mood3">
+      <label for="mood3">普通</label><br>
+
+      <input type="radio" name="mood" value="bad" id="mood4">
+      <label for="mood4">悪い</label><br>
+
+      <input type="radio" name="mood" value="terrible" id="mood5">
+      <label for="mood5">すごく悪い</label>
+    </div>
+  </form>
+</section>
+<section class="volume-section">
+  <h3>音量調節</h3>
+  <input type="range" id="volumeSlider" min="0" max="100" value="50">
+  <span id="volumeValue">50</span>%
+</section>
+
+</footer>
+
+
 <script>
   // ヘッダー画像変更機能
   document.addEventListener('DOMContentLoaded', () => {
@@ -153,7 +191,16 @@
       applyLang(lang);
     });
   });
-
 </script>
+<script>
+  const slider = document.getElementById('volumeSlider');
+  const valueDisplay = document.getElementById('volumeValue');
+
+  slider.addEventListener('input', () => {
+    valueDisplay.textContent = slider.value;
+    // ここで実際に音量を反映する処理を書くこともできます
+  });
+</script>
+
 </body>
 </html>

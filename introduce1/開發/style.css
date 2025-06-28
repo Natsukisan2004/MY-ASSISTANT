@@ -345,9 +345,9 @@ body {
   margin-left: 8px;
   padding: 4px 12px;
   border-radius: 6px;
-  border: none;
+  border: 2px solid #000000;
   background: #fff3;
-  color: #fff;
+  color: #000000;
   cursor: pointer;
   font-weight: bold;
   transition: background 0.2s, color 0.2s;
@@ -359,9 +359,9 @@ body {
 .lang-select {
   padding: 4px 12px;
   border-radius: 6px;
-  border: 1px solid #fff;
+  border: 1px solid #000;
   background: #fff3;
-  color: #fff;
+  color: #000;
   font-weight: bold;
   cursor: pointer;
   outline: none;
@@ -369,7 +369,7 @@ body {
 }
 .lang-select:focus {
   background: #fff6;
-  color: #333;
+  color: #000;
 }
 .global-nav {
   width: 100%;
@@ -389,3 +389,60 @@ body {
   display: flex;
   align-items: center;
 }
+.feedback-section {
+    margin-top: 30px;   /* 上に余白を作る */
+    text-align: center;
+  }
+  
+  .feedback-section form {
+    display: inline-block;
+    text-align: left;
+  }
+  
+  .mood-buttons {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .mood-buttons label {
+    display: inline-block;
+    padding: 8px 16px;
+    border: 2px solid #ccc;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    background-color: white;
+    transition: all 0.2s ease;
+    margin: 4px 0;  /* 上下の余白を少しだけ */
+  }
+  
+  .mood-buttons input[type="radio"] {
+    display: none;
+  }
+  
+  .mood-buttons input[type="radio"]:checked + label {
+    background-color: #4caf50;
+    color: white;
+    border-color: #4caf50;
+  }
+  
+  .settings-footer {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* ←これで中身が中央に */
+    margin-bottom: 0; /* 下の余白をゼロに */
+    padding-bottom: 0;
+    text-align: center;
+  }
+  .volume-section {
+    text-align: center;
+    margin-top: 40px;
+  }
+  
+  #volumeSlider {
+    width: 200px;
+    margin: 10px 0;
+    accent-color: #4caf50; /* スライダーの色（対応ブラウザのみ） */
+  }
+  
