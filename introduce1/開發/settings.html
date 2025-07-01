@@ -201,6 +201,23 @@
     // ここで実際に音量を反映する処理を書くこともできます
   });
 </script>
+<script type="module">
+  import { applyLang } from './JS/lang.js';
+
+  const langSelect = document.getElementById('langSelect');
+  const savedLang = localStorage.getItem('calendarLang') || 'ja';
+  langSelect.value = savedLang;
+
+  const userName = localStorage.getItem("userName") || '';
+  applyLang(savedLang, userName);
+
+  langSelect.addEventListener('change', (e) => {
+    const lang = e.target.value;
+    localStorage.setItem('calendarLang', lang);
+    applyLang(lang, userName);
+  });
+</script>
+
 
 </body>
 </html>

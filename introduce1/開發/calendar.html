@@ -278,5 +278,13 @@
   });
 
 </script>
+<script type="module">
+  import { applyLang } from './JS/lang.js';
+
+  const savedLang = localStorage.getItem('calendarLang') || 'ja';
+  const userName = localStorage.getItem('userName') || '';
+  applyLang(savedLang, userName);
+</script>
+
 </body>
 </html>
