@@ -114,58 +114,6 @@
     const savedLang = localStorage.getItem('calendarLang') || 'ja';
     langSelect.value = savedLang;
 
-    // UIテキスト
-    const texts = {
-      ja: {
-        calendar: 'カレンダー',
-        profile: 'プロフィール',
-        settings: '設定',
-        changeHeader: 'ヘッダー画像変更',
-        chat: '💬 チャット',
-        apiSetting: 'API設定',
-        addEvent: '予定を追加',
-        save: '保存',
-        delete: '削除',
-        welcome: 'ようこそ'
-      },
-      ru: {
-        calendar: 'Календарь',
-        profile: 'Профиль',
-        settings: 'Настройки',
-        changeHeader: 'Изменить изображение шапки',
-        chat: '💬 Чат',
-        apiSetting: 'Настройки API',
-        addEvent: 'Добавить событие',
-        save: 'Сохранить',
-        delete: 'Удалить',
-        welcome: 'Добро пожаловать'
-      },
-      en: {
-        calendar: 'Calendar',
-        profile: 'Profile',
-        settings: 'Settings',
-        changeHeader: 'Change Header Image',
-        chat: '💬 Chat',
-        apiSetting: 'API Settings',
-        addEvent: 'Add Event',
-        save: 'Save',
-        delete: 'Delete',
-        welcome: 'Welcome'
-      },
-      zh: {
-        calendar: '日曆',
-        profile: '個人資料',
-        settings: '設定',
-        changeHeader: '更換標題圖片',
-        chat: '💬 聊天',
-        apiSetting: 'API設定',
-        addEvent: '新增事件',
-        save: '儲存',
-        delete: '刪除',
-        welcome: '歡迎'
-      }
-    };
-
     function applyLang(lang) {
       document.querySelector('a[href="calendar.html"]').textContent = texts[lang].calendar;
       document.querySelector('a[href="profile.html"]').textContent = texts[lang].profile;
@@ -217,6 +165,7 @@
     applyLang(lang, userName);
   });
 </script>
+
 
 
 </body>

@@ -10,7 +10,9 @@ export const texts = {
       addEvent: '予定を追加',
       save: '保存',
       delete: '削除',
-      welcome: 'ようこそ'
+      welcome: 'ようこそ',
+      graphicQuality: 'グラフィック品質',
+      moods: ['すごく良い', '良い', '普通', '悪い', 'すごく悪い']
     },
     en: {
       calendar: 'Calendar',
@@ -22,7 +24,9 @@ export const texts = {
       addEvent: 'Add Event',
       save: 'Save',
       delete: 'Delete',
-      welcome: 'Welcome'
+      welcome: 'Welcome',
+      graphicQuality: 'Graphic Quality',
+      moods: ['Excellent', 'Good', 'Average', 'Poor', 'Terrible']
     },
     ru: {
         calendar: 'Календарь',
@@ -34,7 +38,9 @@ export const texts = {
         addEvent: 'Добавить событие',
         save: 'Сохранить',
         delete: 'Удалить',
-        welcome: 'Добро пожаловать'
+        welcome: 'Добро пожаловать',
+        graphicQuality: 'Качество графики',
+        moods: ['Отлично', 'Хорошо', 'Обычно', 'Плохо', 'Ужасно']
       },
 
       zh: {
@@ -47,7 +53,9 @@ export const texts = {
         addEvent: '新增事件',
         save: '儲存',
         delete: '刪除',
-        welcome: '歡迎'
+        welcome: '歡迎',
+        graphicQuality: '圖像品質',
+        moods: ['非常好', '好', '普通', '差', '非常差']
       }
     };
     // 他の言語も同様に
@@ -85,4 +93,15 @@ export const texts = {
         if (document.getElementById('welcomeMsg')) {
           document.getElementById('welcomeMsg').textContent = `${t.welcome} ${userName} さん`;
         }
+        const qualityHeading = document.querySelector('.feedback-section h3');
+        if (qualityHeading) qualityHeading.textContent = t.graphicQuality;
+      
+        const moodLabels = document.querySelectorAll('.mood-buttons label');
+        if (moodLabels.length === 5 && t.moods) {
+          moodLabels.forEach((label, i) => {
+            label.textContent = t.moods[i];
+          });
+        }
       }
+
+      

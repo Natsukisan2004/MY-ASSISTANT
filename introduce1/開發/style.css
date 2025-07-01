@@ -414,7 +414,7 @@ body {
     font-size: 1rem;
     background-color: white;
     transition: all 0.2s ease;
-    margin: 4px 0;  /* 上下の余白を少しだけ */
+    
   }
   
   .mood-buttons input[type="radio"] {
