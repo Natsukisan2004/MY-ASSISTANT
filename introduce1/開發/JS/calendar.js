@@ -1,4 +1,5 @@
 import { showEventDetails } from './eventModal.js';
+import { texts } from './lang.js'; // textsオブジェクトをインポート
 
 let currentDate = new Date();
 let events = [];
@@ -39,8 +40,18 @@ export function createCalendar() {
   const calendar = document.getElementById('calendar');
   calendar.innerHTML = '';
 
-  // 見出しに年月表示
-  document.getElementById('current-date').textContent = `${year}年${month + 1}月`;
+// 現在の言語設定を取得
+const currentLang = localStorage.getItem('calendarLang') || 'ja';
+const t = texts[currentLang];
+
+// 見出しに言語設定に合わせた年月を表示
+let dateText;
+if (currentLang === 'ja' || currentLang === 'zh') {
+  dateText = `${year}年 ${t.monthNames[month]}`;
+} else {
+  dateText = `${t.monthNames[month]} ${year}`;
+}
+document.getElementById('current-date').textContent = dateText;
 
   const firstDayOfMonth = new Date(year, month, 1);
   const lastDayOfMonth = new Date(year, month + 1, 0);
