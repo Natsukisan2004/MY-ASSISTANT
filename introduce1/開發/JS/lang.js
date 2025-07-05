@@ -15,7 +15,8 @@ export const texts = {
     delete: '削除',
     welcome: 'ようこそ',
     graphicQuality: 'グラフィック品質',
-    moods: ['すごく良い', '良い', '普通', '悪い', 'すごく悪い']
+    moods: ['すごく良い', '良い', '普通', '悪い', 'すごく悪い'],
+    volumeControl: '音量調節' // ★音量調節のテキストを追加
   },
   en: {
     pageTitle: 'My Calendar',
@@ -32,7 +33,8 @@ export const texts = {
     delete: 'Delete',
     welcome: 'Welcome',
     graphicQuality: 'Graphic Quality',
-    moods: ['Excellent', 'Good', 'Average', 'Poor', 'Terrible']
+    moods: ['Excellent', 'Good', 'Average', 'Poor', 'Terrible'],
+    volumeControl: 'Volume Control' // ★音量調節のテキストを追加
   },
   ru: {
       pageTitle: 'Мой календарь',
@@ -49,7 +51,8 @@ export const texts = {
       delete: 'Удалить',
       welcome: 'Добро пожаловать',
       graphicQuality: 'Качество графики',
-      moods: ['Отлично', 'Хорошо', 'Обычно', 'Плохо', 'Ужасно']
+      moods: ['Отлично', 'Хорошо', 'Обычно', 'Плохо', 'Ужасно'],
+      volumeControl: 'Регулировка громкости' // ★音量調節のテキストを追加
     },
     zh: {
       pageTitle: '我的日曆',
@@ -66,7 +69,8 @@ export const texts = {
       delete: '刪除',
       welcome: '歡迎',
       graphicQuality: '圖像品質',
-      moods: ['非常好', '好', '普通', '差', '非常差']
+      moods: ['非常好', '好', '普通', '差', '非常差'],
+      volumeControl: '音量控制' // ★音量調節のテキストを追加
     }
 };
 
@@ -128,13 +132,20 @@ export function applyLang(lang, userName = '') {
   if (qualityHeading) qualityHeading.textContent = t.graphicQuality;
 
   const moodLabels = document.querySelectorAll('.mood-buttons label');
-  if (moodLabels.length === 5 && t.moods) {
+  if (moodLabels.length > 0 && t.moods) {
     moodLabels.forEach((label, i) => {
-      // ラジオボタンのテキスト部分だけを更新
-      const input = label.previousElementSibling;
-      label.innerHTML = ''; // ラベルの中身をクリア
-      label.appendChild(input); // inputを戻す
-      label.append(t.moods[i]); // 新しいテキストを追加
+      if(t.moods[i]) {
+        // input要素は保持しつつテキストだけを更新
+        const input = label.querySelector('input') || label.previousElementSibling;
+        label.textContent = t.moods[i];
+        if(input) label.prepend(input);
+      }
     });
+  }
+
+  // ★音量調節のテキストを適用する処理を追加
+  const volumeHeading = document.querySelector('.volume-section h3');
+  if (volumeHeading) {
+    volumeHeading.textContent = t.volumeControl;
   }
 }
