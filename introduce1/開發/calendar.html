@@ -131,11 +131,15 @@
     <form id="apiSettingForm">
       <div class="form-group">
         <label>API URL</label>
-        <input type="text" id="apiUrlInput" placeholder="https://api.openai.com/v1/chat/completions" required>
+        <input type="text" id="apiUrlInput" placeholder="https://openrouter.ai/api/v1/chat/completions" required>
       </div>
       <div class="form-group">
         <label>API Key</label>
-        <input type="password" id="apiKeyInput" placeholder="sk-..." required>
+        <input type="password" id="apiKeyInput" placeholder="sk-or-..." required>
+      </div>
+      <div class="form-group">
+        <label>Model</label>
+        <input type="text" id="modelInput" placeholder="deepseek/deepseek-r1-0528:free" required>
       </div>
       <button type="submit">保存</button>
     </form>
@@ -198,6 +202,8 @@
   // 言語設定機能
   document.addEventListener('DOMContentLoaded', () => {
     const langSelect = document.getElementById('langSelect');
+    if (!langSelect) return;
+
     // 保存された言語を適用
     const savedLang = localStorage.getItem('calendarLang') || 'ja';
     langSelect.value = savedLang;

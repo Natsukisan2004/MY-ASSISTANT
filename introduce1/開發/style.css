@@ -170,11 +170,37 @@ body {
     background-color: #1a73e8;
     color: white;
     border: none;
-    padding: 10px 14px;
+    padding: 12px 18px;
     border-radius: 30px;
     font-size: 16px;
     cursor: pointer;
     z-index: 1000;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    transition: background-color 0.2s, transform 0.2s;
+}
+#chatToggle:hover {
+    background-color: #1669c1;
+    transform: translateY(-2px);
+}
+
+#openApiSetting {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1001;
+    background-color: #ff9800;
+    color: #fff;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 24px;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    transition: background-color 0.2s, transform 0.2s;
+}
+#openApiSetting:hover {
+    background-color: #fb8c00;
+    transform: translateY(-2px);
 }
 
 .chat-window {
@@ -191,6 +217,7 @@ body {
     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     z-index: 999;
     padding: 10px;
+    backdrop-filter: blur(6px);
 }
 
 .chat-messages {
@@ -198,6 +225,8 @@ body {
     overflow-y: auto;
     margin-bottom: 10px;
     font-size: 14px;
+    display: flex;
+    flex-direction: column;
 }
 
 .chat-messages div {
@@ -220,14 +249,90 @@ body {
 
 .event-detail-popup {
     position: fixed;
-    top: 30%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: white;
-    border: 1px solid #ccc;
-    padding: 1em;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
     z-index: 1000;
-    box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+.event-detail-modal {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.event-detail-modal h3 {
+    margin: 0 0 16px 0;
+    color: #1a73e8;
+    font-size: 18px;
+}
+
+.event-detail-modal p {
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+.event-detail-modal strong {
+    color: #333;
+    display: inline-block;
+    width: 80px;
+}
+
+.button-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    justify-content: flex-end;
+}
+
+.event-detail-modal button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+#confirmAddEventBtn {
+    background-color: #4caf50;
+    color: white;
+}
+
+#confirmAddEventBtn:hover {
+    background-color: #43a047;
+}
+
+#cancelAddEventBtn {
+    background-color: #f5f5f5;
+    color: #666;
+}
+
+#cancelAddEventBtn:hover {
+    background-color: #e0e0e0;
+}
+
+#editEventBtn {
+    background-color: #ff9800;
+    color: white;
+}
+
+#deleteEventBtn {
+    background-color: #f44336;
+    color: white;
+}
+
+#confirmDeleteBtn {
+    background-color: #f44336;
+    color: white;
 }
 
 /* 曜日別カラーリング */
@@ -445,4 +550,74 @@ body {
     margin: 10px 0;
     accent-color: #4caf50; /* スライダーの色（対応ブラウザのみ） */
   }
+  
+/* Chat message bubbles */
+.chat-messages .message {
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    border-radius: 8px;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+.chat-messages .user-message {
+    background-color: #e3f2fd;
+    align-self: flex-end;
+    text-align: right;
+}
+.chat-messages .assistant-message {
+    background-color: #e8f5e9;
+    align-self: flex-start;
+}
+.chat-messages .error-message {
+    background-color: #ffebee;
+    color: #c62828;
+}
+.chat-messages .log-message {
+    background-color: #f3e5f5;
+    font-size: 12px;
+}
+
+/* Chat form layout */
+#chatForm {
+    display: flex;
+    gap: 6px;
+}
+#chatForm input[type="text"] {
+    flex: 1;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+#chatForm button[type="submit"] {
+    background-color: #4caf50;
+    border: none;
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+#chatForm button[type="submit"]:hover {
+    background-color: #43a047;
+}
+
+/* Mic button */
+#micBtn {
+    background-color: #ff5252;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+#micBtn:hover {
+    background-color: #e04848;
+    transform: scale(1.05);
+}
   

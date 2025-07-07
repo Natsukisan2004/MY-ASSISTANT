@@ -107,6 +107,83 @@ document.addEventListener('DOMContentLoaded', async () => {
     messagesId: 'chatMessages'
   });
 
+  // チャットAIからの確認イベント処理
+  window.onChatConfirmed = async (confirmedEvent) => {
+    const userUId = localStorage.getItem("userUId");
+    if (!userUId) {
+      alert("ログインしてください");
+      return;
+    }
+
+    try {
+      const events = getEvents();
+      events.push(confirmedEvent);
+      await saveEvent(userUId, confirmedEvent);
+      createCalendar();
+      console.log('✅ AIからの予定が保存されました:', confirmedEvent);
+    } catch (error) {
+      console.error('❌ AIイベント保存失敗:', error);
+      alert('予定の保存に失敗しました');
+    }
+  };
+
+  // ===== ここから追加：チャットウィンドウの開閉 =====
+  const chatToggleBtn = document.getElementById('chatToggle');
+  const chatWindow = document.getElementById('chatWindow');
+  if (chatToggleBtn && chatWindow) {
+    chatToggleBtn.addEventListener('click', () => {
+      chatWindow.classList.toggle('hidden');
+    });
+  }
+
+  // ===== ここから追加：OpenAI API 設定モーダル =====
+  const openApiSettingBtn = document.getElementById('openApiSetting');
+  const apiSettingModal = document.getElementById('apiSettingModal');
+  const closeApiSettingBtn = document.getElementById('closeApiSetting');
+  const apiSettingForm = document.getElementById('apiSettingForm');
+  const apiUrlInput = document.getElementById('apiUrlInput');
+  const apiKeyInput = document.getElementById('apiKeyInput');
+  const modelInput = document.getElementById('modelInput');
+
+  if (openApiSettingBtn && apiSettingModal) {
+    // ボタンでモーダル表示
+    openApiSettingBtn.addEventListener('click', () => {
+      // 既存設定をフォームに反映
+      apiUrlInput.value = localStorage.getItem('openai_api_url') || 'https://openrouter.ai/api/v1/chat/completions';
+      apiKeyInput.value = localStorage.getItem('openai_api_key') || '';
+      modelInput.value = localStorage.getItem('openai_model') || 'deepseek/deepseek-r1-0528:free';
+      apiSettingModal.classList.add('show');
+    });
+  }
+
+  if (closeApiSettingBtn && apiSettingModal) {
+    closeApiSettingBtn.addEventListener('click', () => {
+      apiSettingModal.classList.remove('show');
+    });
+  }
+
+  // モーダルの外側クリックで閉じる
+  if (apiSettingModal) {
+    apiSettingModal.addEventListener('click', (e) => {
+      if (e.target === apiSettingModal) {
+        apiSettingModal.classList.remove('show');
+      }
+    });
+  }
+
+  // フォーム送信で設定を保存
+  if (apiSettingForm) {
+    apiSettingForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      localStorage.setItem('openai_api_url', apiUrlInput.value.trim());
+      localStorage.setItem('openai_api_key', apiKeyInput.value.trim());
+      localStorage.setItem('openai_model', modelInput.value.trim());
+      apiSettingModal.classList.remove('show');
+      alert('API設定を保存しました');
+    });
+  }
+  // ===== 追加ここまで =====
+
   // モーダルを閉じる処理
   const modal = document.getElementById('eventModal');
   modal.querySelector('.close').addEventListener('click', () => {
