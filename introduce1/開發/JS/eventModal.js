@@ -1,4 +1,4 @@
-import { deleteEvent, updateEvent } from './eventStorage.js';
+import { deleteEvent } from './eventStorage.js';
 
 const userUId = localStorage.getItem("userUId");
 
@@ -22,28 +22,43 @@ export function showEventDetails(event, onDelete) {
   `;
   document.body.appendChild(modal);
 
-  // 編集ボタン処理
-  document.getElementById('editEventBtn').onclick = () => {
-    openEventModalForEdit(event);
-    document.body.removeChild(modal);
-  };
+  // --- イベントリスナー方式に修正 ---
+  const editBtn = modal.querySelector('#editEventBtn');
+  const deleteBtn = modal.querySelector('#deleteEventBtn');
 
-  // 削除ボタン処理（確認モーダル）
-  document.getElementById('deleteEventBtn').onclick = () => {
-    showDeleteConfirm(event, () => {
-      if (event._id && userUId) {
-        deleteEvent(userUId, event._id, () => {
-          if (typeof onDelete === 'function') onDelete();
-          document.body.removeChild(modal);
-        });
-      } else {
+  editBtn.addEventListener('click', () => {
+    openEventModalForEdit(event);
+    if (document.body.contains(modal)) {
+      document.body.removeChild(modal);
+    }
+  });
+
+  deleteBtn.addEventListener('click', () => {
+    showDeleteConfirm(event, async () => {
+      if (!event._id || !userUId) {
         console.error("イベントIDまたはユーザーIDがありません");
+        return;
+      }
+      try {
+        await deleteEvent(userUId, event._id);
+        if (typeof onDelete === 'function') {
+          onDelete();
+        }
+      } catch (error) {
+        console.error("❌ イベントの削除に失敗しました", error);
+        alert("イベントの削除に失敗しました。");
+      } finally {
+        if (document.body.contains(modal)) {
+          document.body.removeChild(modal);
+        }
       }
     });
-  };
+  });
 
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) document.body.removeChild(modal);
+    if (e.target === modal && document.body.contains(modal)) {
+      document.body.removeChild(modal);
+    }
   });
 }
 
@@ -61,17 +76,30 @@ export function showDeleteConfirm(event, onConfirm) {
   `;
   document.body.appendChild(modal);
 
-  document.getElementById('confirmDeleteBtn').onclick = () => {
-    if (typeof onConfirm === 'function') onConfirm();
-    document.body.removeChild(modal);
-  };
+  // --- イベントリスナー方式に修正 ---
+  const confirmBtn = modal.querySelector('#confirmDeleteBtn');
+  const cancelBtn = modal.querySelector('#cancelDeleteBtn');
 
-  document.getElementById('cancelDeleteBtn').onclick = () => {
-    document.body.removeChild(modal);
-  };
+  confirmBtn.addEventListener('click', () => {
+    if (typeof onConfirm === 'function') {
+      onConfirm();
+    }
+    // このモーダルは、確認ボタンが押されたら必ず閉じる
+    if (document.body.contains(modal)) {
+      document.body.removeChild(modal);
+    }
+  });
+
+  cancelBtn.addEventListener('click', () => {
+    if (document.body.contains(modal)) {
+      document.body.removeChild(modal);
+    }
+  });
 
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) document.body.removeChild(modal);
+    if (e.target === modal && document.body.contains(modal)) {
+      document.body.removeChild(modal);
+    }
   });
 }
 
@@ -95,14 +123,17 @@ export function showEventConfirm(eventObj, onConfirm) {
   `;
   document.body.appendChild(modal);
 
-  document.getElementById('confirmAddEventBtn').onclick = () => {
+  const confirmBtn = modal.querySelector('#confirmAddEventBtn');
+  const cancelBtn = modal.querySelector('#cancelAddEventBtn');
+
+  confirmBtn.addEventListener('click', () => {
     if (typeof onConfirm === 'function') onConfirm(eventObj);
     document.body.removeChild(modal);
-  };
+  });
 
-  document.getElementById('cancelAddEventBtn').onclick = () => {
+  cancelBtn.addEventListener('click', () => {
     document.body.removeChild(modal);
-  };
+  });
 
   modal.addEventListener('click', (e) => {
     if (e.target === modal) document.body.removeChild(modal);
@@ -116,15 +147,13 @@ export function openEventModal(date) {
     console.error('eventModal 要素が見つかりません');
     return;
   }
-
   document.getElementById('eventDate').value = formatDate(date);
   document.getElementById('eventEndDate').value = formatDate(date);
   document.getElementById('eventTime').value = '';
   document.getElementById('eventLocation').value = '';
   document.getElementById('eventNote').value = '';
   document.querySelector('input[name="eventColor"][value="#1a73e8"]').checked = true;
-
-  eventModal.dataset.editingId = ''; // 新規なので空
+  eventModal.dataset.editingId = '';
   eventModal.classList.add('show');
 }
 
@@ -135,7 +164,6 @@ export function openEventModalForEdit(event) {
     console.error('eventModal 要素が見つかりません');
     return;
   }
-
   document.getElementById('eventDate').value = event.startDate;
   document.getElementById('eventEndDate').value = event.endDate || event.startDate;
   document.getElementById('eventTime').value = event.time || '';
@@ -145,8 +173,7 @@ export function openEventModalForEdit(event) {
     const colorRadio = document.querySelector(`input[name="eventColor"][value="${event.color}"]`);
     if (colorRadio) colorRadio.checked = true;
   }
-
-  eventModal.dataset.editingId = event._id; // 編集対象IDを記録
+  eventModal.dataset.editingId = event._id;
   eventModal.classList.add('show');
 }
 

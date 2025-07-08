@@ -15,6 +15,20 @@ import {
 } from './eventModal.js';
 import { initChatAssistant } from './chatAssistant.js';
 
+// 【追加】Firebaseから最新イベントを取得しカレンダーを再描画する関数
+export async function refreshCalendar() {
+  const userUId = localStorage.getItem("userUId");
+  if (!userUId) return;
+
+  try {
+    const loadedEvents = await loadEvents(userUId);
+    setEvents(loadedEvents);
+    createCalendar();
+  } catch (error) {
+    console.error('❌ カレンダーの更新に失敗しました', error);
+  }
+}
+
 // 月の切り替え
 document.getElementById('prevMonth').onclick = () => {
   const current = getCurrentDate();
@@ -45,7 +59,7 @@ eventForm.onsubmit = async function (e) {
   }
 
   const formData = new FormData(eventForm);
-  const newEvent = {
+  const eventDate = {
     startDate: formData.get('eventDate'),
     endDate: formData.get('eventEndDate'),
     time: formData.get('eventTime'),
@@ -56,27 +70,23 @@ eventForm.onsubmit = async function (e) {
 
   const modal = document.getElementById('eventModal');
   const editingId = modal.dataset.editingId;
-  const events = getEvents();
 
   try {
     if (editingId) {
-      // 編集時
-      newEvent._id = editingId;
-      const index = events.findIndex(e => e._id === editingId);
-      if (index !== -1) {
-        events[index] = newEvent;
-        await updateEvent(userUId, editingId, newEvent); // Firestore更新
-      }
+      // 編集時：直接Firestoreを更新
+      eventDate._id = editingId;
+      await updateEvent(userUId, editingId, eventDate);
     } else {
-      // 新規作成時
-      events.push(newEvent);
-      await saveEvent(userUId, newEvent); // Firestore追加
+      // 新規作成時：直接Firestoreに追加
+      await saveEvent(userUId, eventDate);
     }
+    
+    // ★ 処理成功後にローカル配列を直接いじらず、refreshCalendarを呼ぶ
+    await refreshCalendar();
 
-    createCalendar();
     modal.classList.remove('show');
     eventForm.reset();
-    modal.dataset.editingId = ''; // 編集状態解除
+    modal.dataset.editingId = '';
   } catch (error) {
     alert('イベントの保存に失敗しました');
     console.error(error);

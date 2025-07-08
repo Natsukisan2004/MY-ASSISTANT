@@ -62,55 +62,55 @@
     
     <!-- 事件添加モーダル -->
     <div id="eventModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h3>予定を追加</h3>
-            <form id="eventForm">
-                <div class="form-group">
-                    <label for="eventDate">日付:</label>
-                    <input type="date" id="eventDate" required placeholder="例: 2025-06-24" title="日付を選択してください">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>予定を追加</h3>
+        <form id="eventForm">
+            <div class="form-group">
+                <label for="eventDate">日付:</label>
+                <input type="date" id="eventDate" name="eventDate" required placeholder="例: 2025-06-24" title="日付を選択してください">
+            </div>
+            <div class="form-group">
+                <label for="eventEndDate">終了日:</label>
+                <input type="date" id="eventEndDate" name="eventEndDate" required placeholder="例: 2025-06-25" title="終了日を選択してください">
+            </div>
+            <div class="form-group">
+                <label for="eventTime">時間:</label>
+                <input type="time" id="eventTime" name="eventTime" required placeholder="例: 13:00" title="時間を入力してください">
+            </div>
+            <div class="form-group">
+                <label for="eventLocation">場所:</label>
+                <input type="text" id="eventLocation" name="eventLocation" required placeholder="例: 会議室A" title="場所を入力してください">
+            </div>
+            <div class="form-group">
+                <label for="eventNote">メモ:</label>
+                <textarea id="eventNote" name="eventNote" placeholder="例: 打ち合わせ内容" title="メモを入力してください"></textarea>
+            </div>
+            <div class="form-group">
+                <label>カラー:</label>
+                <div class="color-picker">
+                    <input type="radio" name="eventColor" value="#1a73e8" id="color1" checked>
+                    <label for="color1" style="background-color: #1a73e8" title="青"></label>
+                    
+                    <input type="radio" name="eventColor" value="#d93025" id="color2">
+                    <label for="color2" style="background-color: #d93025" title="赤"></label>
+                    
+                    <input type="radio" name="eventColor" value="#f9ab00" id="color3">
+                    <label for="color3" style="background-color: #f9ab00" title="黄"></label>
+                    
+                    <input type="radio" name="eventColor" value="#137333" id="color4">
+                    <label for="color4" style="background-color: #137333" title="緑"></label>
+                    
+                    <input type="radio" name="eventColor" value="#a142f4" id="color5">
+                    <label for="color5" style="background-color: #a142f4" title="紫"></label>
                 </div>
-                <div class="form-group">
-                    <label for="eventEndDate">終了日:</label>
-                    <input type="date" id="eventEndDate" name="eventEndDate" required placeholder="例: 2025-06-25" title="終了日を選択してください">
-                </div>
-                <div class="form-group">
-                    <label for="eventTime">時間:</label>
-                    <input type="time" id="eventTime" required placeholder="例: 13:00" title="時間を入力してください">
-                </div>
-                <div class="form-group">
-                    <label for="eventLocation">場所:</label>
-                    <input type="text" id="eventLocation" required placeholder="例: 会議室A" title="場所を入力してください">
-                </div>
-                <div class="form-group">
-                    <label for="eventNote">メモ:</label>
-                    <textarea id="eventNote" placeholder="例: 打ち合わせ内容" title="メモを入力してください"></textarea>
-                </div>
-                <div class="form-group">
-                    <label>カラー:</label>
-                    <div class="color-picker">
-                        <input type="radio" name="eventColor" value="#1a73e8" id="color1" checked>
-                        <label for="color1" style="background-color: #1a73e8" title="青"></label>
-                        
-                        <input type="radio" name="eventColor" value="#d93025" id="color2">
-                        <label for="color2" style="background-color: #d93025" title="赤"></label>
-                        
-                        <input type="radio" name="eventColor" value="#f9ab00" id="color3">
-                        <label for="color3" style="background-color: #f9ab00" title="黄"></label>
-                        
-                        <input type="radio" name="eventColor" value="#137333" id="color4">
-                        <label for="color4" style="background-color: #137333" title="緑"></label>
-                        
-                        <input type="radio" name="eventColor" value="#a142f4" id="color5">
-                        <label for="color5" style="background-color: #a142f4" title="紫"></label>
-                    </div>
-                </div>
-                <button type="submit">保存</button>
-            </form>
-            <button id="deleteEventBtn" style="display:none;">削除</button>
-        </div>
+            </div>
+            <button type="submit">保存</button>
+        </form>
+        <button id="deleteEventBtn" style="display:none;">削除</button>
     </div>
 </div>
+                    
 
 <!-- チャット機能 -->
 <button id="chatToggle">💬 チャット</button>
@@ -149,12 +149,7 @@
 
 <script type="module" src="JS/main.js"></script>
 <script>
-  function deleteEvent(event) {
-    // events配列から削除
-    const idx = events.indexOf(event);
-    if (idx !== -1) events.splice(idx, 1);
-
-  }
+  
   // 既存の deleteEvent 関数のあと、ここに追加👇
   // 「×」ボタンでモーダルを閉じる
   document.querySelector('.modal .close').addEventListener('click', () => {

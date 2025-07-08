@@ -1,3 +1,4 @@
+import { refreshCalendar } from './main.js';
 import { showEventDetails } from './eventModal.js';
 import { texts } from './lang.js'; // textsオブジェクトをインポート
 
@@ -127,14 +128,9 @@ function renderEvents() {
       eventDiv.addEventListener('click', (e) => {
         e.stopPropagation();
 
-        showEventDetails(event, () => {
-          const idx = events.findIndex(ev => ev._id === event._id);
-          if (idx !== -1) {
-            events.splice(idx, 1);
-            // Firestoreからの削除などの処理はここに追加可能
-            createCalendar();
-          }
-        });
+        // 第2引数のコールバックに、ローカル配列を操作する処理の代わりに
+        // main.jsからインポートしたrefreshCalendarを直接渡す
+        showEventDetails(event, refreshCalendar);
       });
 
       eventsContainer.appendChild(eventDiv);
