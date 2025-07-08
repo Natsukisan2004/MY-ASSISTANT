@@ -123,8 +123,7 @@ function renderEvents() {
       const eventDiv = document.createElement('div');
       eventDiv.className = 'event-item';
       eventDiv.style.backgroundColor = event.color || '#1a73e8';
-      eventDiv.innerHTML = `<span>${event.time}</span><span>${event.note}</span>`;
-
+      eventDiv.textContent = event.eventName;
       eventDiv.addEventListener('click', (e) => {
         e.stopPropagation();
 

@@ -8,10 +8,8 @@ export function showEventDetails(event, onDelete) {
   modal.className = 'event-detail-popup';
   modal.innerHTML = `
     <div class="event-detail-modal">
-      <h3>予定の詳細</h3>
-      <p><strong>開始日:</strong> ${event.startDate}</p>
-      <p><strong>終了日:</strong> ${event.endDate || event.startDate}</p>
-      <p><strong>時間:</strong> ${event.time}</p>
+      <h3>${event.eventName || '予定の詳細'}</h3> <p><strong>開始:</strong> ${event.startDate} ${event.startTime}</p>
+      <p><strong>終了:</strong> ${event.endDate} ${event.endTime}</p>
       <p><strong>場所:</strong> ${event.location}</p>
       <p><strong>メモ:</strong> ${event.note}</p>
       <div class="button-row">
@@ -69,7 +67,7 @@ export function showDeleteConfirm(event, onConfirm) {
   modal.innerHTML = `
     <div class="event-detail-modal">
       <h3>このイベントを削除してもよろしいですか？</h3>
-      <p><strong>${event.note}</strong> - ${event.startDate} ${event.time}</p>
+      <p><strong>${event.eventName}</strong> (${event.startDate} ${event.startTime})</p>
       <button id="confirmDeleteBtn">削除</button>
       <button id="cancelDeleteBtn">キャンセル</button>
     </div>
@@ -145,9 +143,11 @@ export function openEventModal(date) {
     console.error('eventModal 要素が見つかりません');
     return;
   }
+  document.getElementById('eventName').value = '';
   document.getElementById('eventDate').value = formatDate(date);
   document.getElementById('eventEndDate').value = formatDate(date);
-  document.getElementById('eventTime').value = '';
+  document.getElementById('eventStartTime').value = '';
+  document.getElementById('eventEndTime').value = ''; 
   document.getElementById('eventLocation').value = '';
   document.getElementById('eventNote').value = '';
   document.querySelector('input[name="eventColor"][value="#1a73e8"]').checked = true;
@@ -162,9 +162,11 @@ export function openEventModalForEdit(event) {
     console.error('eventModal 要素が見つかりません');
     return;
   }
+  document.getElementById('eventName').value = event.eventName || '';
   document.getElementById('eventDate').value = event.startDate;
   document.getElementById('eventEndDate').value = event.endDate || event.startDate;
-  document.getElementById('eventTime').value = event.time || '';
+  document.getElementById('eventStartTime').value = event.startTime || '';
+  document.getElementById('eventEndTime').value = event.endTime || '';
   document.getElementById('eventLocation').value = event.location || '';
   document.getElementById('eventNote').value = event.note || '';
   if (event.color) {

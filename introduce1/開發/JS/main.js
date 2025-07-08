@@ -60,9 +60,11 @@ eventForm.onsubmit = async function (e) {
 
   const formData = new FormData(eventForm);
   const eventDate = {
+    eventName: formData.get('eventName'),
     startDate: formData.get('eventDate'),
     endDate: formData.get('eventEndDate'),
-    time: formData.get('eventTime'),
+    startTime: formData.get('eventStartTime'), 
+    endTime: formData.get('eventEndTime'),   
     location: formData.get('eventLocation'),
     note: formData.get('eventNote'),
     color: formData.get('eventColor'),
