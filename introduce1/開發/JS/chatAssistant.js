@@ -28,6 +28,11 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
     console.log('- 麦克风按钮:', micBtn ? '✅ 找到' : '❌ 未找到');
     console.log('- 发送按钮:', sendBtn ? '✅ 找到' : '❌ 未找到');
     
+    // 修正发送按钮文本
+    if (sendBtn && sendBtn.textContent.includes('"send"')) {
+      sendBtn.textContent = '发送';
+    }
+    
     // 确保按钮可见
     if (imageBtn) {
       imageBtn.style.visibility = 'visible';
@@ -36,6 +41,46 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
     if (micBtn) {
       micBtn.style.visibility = 'visible';
       micBtn.style.opacity = '1';
+    }
+    
+    // 动态添加粘贴提示
+    const inputGroup = document.querySelector('#chatForm .input-group');
+    if (inputGroup && !document.getElementById('pasteHint')) {
+      const pasteHint = document.createElement('div');
+      pasteHint.id = 'pasteHint';
+      pasteHint.className = 'paste-hint';
+      pasteHint.textContent = 'Ctrl+V 粘贴图片';
+      inputGroup.appendChild(pasteHint);
+      
+      // 添加动态显示逻辑
+      let showHintTimeout;
+      
+             // 键盘事件监听
+       document.addEventListener('keydown', (e) => {
+         // Ctrl+V 粘贴时显示提示
+         if ((e.ctrlKey || e.metaKey) && e.key === 'v' && chatWindow && !chatWindow.classList.contains('hidden')) {
+           pasteHint.classList.add('show');
+           clearTimeout(showHintTimeout);
+           showHintTimeout = setTimeout(() => {
+             pasteHint.classList.remove('show');
+           }, 2000);
+         }
+         // 按住Ctrl键时显示粘贴提示（如果聊天窗口打开）
+         else if ((e.ctrlKey || e.metaKey) && !e.repeat && chatWindow && !chatWindow.classList.contains('hidden')) {
+           pasteHint.classList.add('show');
+           pasteHint.textContent = 'Ctrl+V 粘贴图片';
+         }
+       });
+       
+       // 松开Ctrl键时隐藏提示
+       document.addEventListener('keyup', (e) => {
+         if (!e.ctrlKey && !e.metaKey) {
+           clearTimeout(showHintTimeout);
+           showHintTimeout = setTimeout(() => {
+             pasteHint.classList.remove('show');
+           }, 300);
+         }
+       });
     }
   }, 1000);
 
@@ -457,6 +502,70 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
     }
   }
 
+  // 剪贴板粘贴图片功能
+  function handleClipboardPaste(e) {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    let hasImage = false;
+    
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      
+      // 检查是否为图片
+      if (item.type.startsWith('image/')) {
+        e.preventDefault(); // 阻止默认粘贴行为
+        hasImage = true;
+        
+        const file = item.getAsFile();
+        if (file) {
+          // 显示粘贴提示
+          createAnimatedMessage('📋 检测到剪贴板图片，正在处理...', 'assistant-message');
+          
+          currentImageFile = file;
+          showImagePreview(file);
+          
+          // 首次使用提示
+          if (!localStorage.getItem('clipboard_tip_shown')) {
+            setTimeout(() => {
+              createAnimatedMessage('💡 小贴士：您可以随时使用 Ctrl+V 快速粘贴截图或复制的图片！', 'assistant-message');
+              localStorage.setItem('clipboard_tip_shown', 'true');
+            }, 2000);
+          }
+        }
+        break; // 只处理第一张图片
+      }
+    }
+    
+    // 如果粘贴的不是图片，且光标不在输入框中，给出提示
+    if (!hasImage && e.target !== userInput) {
+      const hasText = Array.from(items).some(item => item.type === 'text/plain');
+      if (!hasText) {
+        createAnimatedMessage('📋 剪贴板中没有检测到图片，请复制图片后再试', 'assistant-message');
+      }
+    }
+  }
+
+  // 为聊天窗口添加粘贴监听器
+  if (chatWindow) {
+    chatWindow.addEventListener('paste', handleClipboardPaste);
+  }
+
+  // 为整个文档添加粘贴监听器（当聊天窗口打开时）
+  let pasteListenerAdded = false;
+  
+  function addGlobalPasteListener() {
+    if (!pasteListenerAdded) {
+      document.addEventListener('paste', (e) => {
+        // 只在聊天窗口打开时处理粘贴
+        if (chatWindow && !chatWindow.classList.contains('hidden')) {
+          handleClipboardPaste(e);
+        }
+      });
+      pasteListenerAdded = true;
+    }
+  }
+
   // 事件监听器设置
   
   // 图片上传按钮点击
@@ -536,16 +645,32 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
     removeImageBtn.addEventListener('click', hideImagePreview);
   }
 
-  // 聊天窗口显示时显示拖拽区域
-  const chatWindow = document.getElementById('chatWindow');
+  // 聊天窗口显示时显示拖拽区域和激活粘贴功能
   if (chatWindow && imageDropZone) {
     const observer = new MutationObserver((mutations) => {
       mutations.forEach((mutation) => {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
           if (!chatWindow.classList.contains('hidden')) {
-            // 聊天窗口打开时显示拖拽区域
+            // 聊天窗口打开时
+            // 1. 显示拖拽区域
             if (!currentImageFile && !imagePreview.classList.contains('hidden') === false) {
               imageDropZone.classList.remove('hidden');
+            }
+            // 2. 激活全局粘贴监听器
+            addGlobalPasteListener();
+            
+            // 3. 首次使用引导（只显示一次）
+            if (!localStorage.getItem('chat_features_intro_shown')) {
+              setTimeout(() => {
+                createAnimatedMessage('🎉 欢迎使用智能日程助手！', 'assistant-message');
+                setTimeout(() => {
+                  createAnimatedMessage('💡 支持三种方式添加日程：\n📝 文字输入 • 🎤 语音输入 • 📷 图片识别', 'assistant-message');
+                  setTimeout(() => {
+                    createAnimatedMessage('⚡ 小贴士：复制图片后按 Ctrl+V 可快速粘贴识别！', 'assistant-message');
+                    localStorage.setItem('chat_features_intro_shown', 'true');
+                  }, 1500);
+                }, 1200);
+              }, 800);
             }
           } else {
             // 聊天窗口关闭时隐藏所有图片相关界面
