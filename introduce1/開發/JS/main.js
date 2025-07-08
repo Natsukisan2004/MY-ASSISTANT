@@ -144,6 +144,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const apiUrlInput = document.getElementById('apiUrlInput');
   const apiKeyInput = document.getElementById('apiKeyInput');
   const modelInput = document.getElementById('modelInput');
+  const ocrApiKeyInput = document.getElementById('ocrApiKeyInput');
 
   if (openApiSettingBtn && apiSettingModal) {
     // ボタンでモーダル表示
@@ -152,6 +153,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       apiUrlInput.value = localStorage.getItem('openai_api_url') || 'https://openrouter.ai/api/v1/chat/completions';
       apiKeyInput.value = localStorage.getItem('openai_api_key') || '';
       modelInput.value = localStorage.getItem('openai_model') || 'deepseek/deepseek-r1-0528:free';
+      ocrApiKeyInput.value = localStorage.getItem('ocr_api_key') || '';
       apiSettingModal.classList.add('show');
     });
   }
@@ -178,8 +180,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       localStorage.setItem('openai_api_url', apiUrlInput.value.trim());
       localStorage.setItem('openai_api_key', apiKeyInput.value.trim());
       localStorage.setItem('openai_model', modelInput.value.trim());
+      
+      // OCR API Key保存（空でも保存）
+      localStorage.setItem('ocr_api_key', ocrApiKeyInput.value.trim());
+      
       apiSettingModal.classList.remove('show');
-      alert('API設定を保存しました');
+      alert('🎉 AI & OCR API设置已保存！\n\n💡 提示：\n- 图片识别功能已激活\n- 可通过拖拽或点击上传图片\n- 系统将自动识别文字并创建日程');
     });
   }
   // ===== 追加ここまで =====

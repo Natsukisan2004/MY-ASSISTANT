@@ -125,7 +125,7 @@
         <div class="drop-zone-content">
             <div class="drop-zone-icon">📷</div>
             <div class="drop-zone-text">拖拽图片到这里或点击上传</div>
-            <div class="drop-zone-subtext">支持 JPG, PNG, GIF 格式</div>
+            <div class="drop-zone-subtext">支持 JPG, PNG, GIF 格式 • 文件大小 ≤ 1MB</div>
         </div>
     </div>
     
@@ -150,7 +150,7 @@
             <input type="file" id="imageInput" accept="image/*" style="display: none;" />
             <button type="button" id="imageBtn" title="上传图片识别文字">📷</button>
             <button type="button" id="micBtn" title="语音输入">🎤</button>
-            <button type="submit" id="sendBtn">发送</button>
+            <button type="submit" id="sendBtn">“send"</button>
         </div>
     </form>
 </div>
@@ -159,25 +159,45 @@
 <div id="apiSettingModal" class="modal">
   <div class="modal-content">
     <span class="close" id="closeApiSetting">&times;</span>
-    <h3>OpenAI API設定</h3>
+    <h3>AI & OCR API設定</h3>
     <form id="apiSettingForm">
-      <div class="form-group">
-        <label>API URL</label>
-        <input type="text" id="apiUrlInput" placeholder="https://openrouter.ai/api/v1/chat/completions" required>
+      <div class="api-section">
+        <h4>🤖 AI聊天设置</h4>
+        <div class="form-group">
+          <label>API URL</label>
+          <input type="text" id="apiUrlInput" placeholder="https://openrouter.ai/api/v1/chat/completions" required>
+          <small class="form-help">支持OpenRouter、OpenAI等兼容API</small>
+        </div>
+        <div class="form-group">
+          <label>API Key</label>
+          <input type="password" id="apiKeyInput" placeholder="sk-or-..." required>
+          <small class="form-help">您的AI服务API密钥</small>
+        </div>
+        <div class="form-group">
+          <label>Model</label>
+          <input type="text" id="modelInput" placeholder="deepseek/deepseek-r1-0528:free" required>
+          <small class="form-help">推荐: deepseek/deepseek-r1, openai/gpt-4</small>
+        </div>
       </div>
-      <div class="form-group">
-        <label>API Key</label>
-        <input type="password" id="apiKeyInput" placeholder="sk-or-..." required>
+      
+      <div class="api-section">
+        <h4>📷 OCR图片识别设置</h4>
+        <div class="form-group">
+          <label>OCR API Key</label>
+          <input type="password" id="ocrApiKeyInput" placeholder="免费版有限制，建议申请专属密钥">
+          <small class="form-help">
+            OCR.space API密钥 - 
+            <a href="https://ocr.space/ocrapi" target="_blank" style="color: #667eea;">免费申请</a>
+            (可选，系统提供免费额度)
+          </small>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Model</label>
-        <input type="text" id="modelInput" placeholder="deepseek/deepseek-r1-0528:free" required>
-      </div>
-      <button type="submit">保存</button>
+      
+      <button type="submit">保存设置</button>
     </form>
   </div>
 </div>
-<button id="openApiSetting" style="position:fixed;bottom:20px;left:20px;z-index:1001;">API設定</button>
+<button id="openApiSetting" style="position:fixed;bottom:20px;left:20px;z-index:1001;">⚙️ API设置</button>
 
 <script type="module" src="JS/main.js"></script>
 <script>
