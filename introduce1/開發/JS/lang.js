@@ -16,7 +16,7 @@ export const texts = {
     welcome: 'ようこそ',
     graphicQuality: 'グラフィック品質',
     moods: ['すごく良い', '良い', '普通', '悪い', 'すごく悪い'],
-    volumeControl: '音量調節' // ★音量調節のテキストを追加
+    volumeControl: '音量調節'
   },
   en: {
     pageTitle: 'My Calendar',
@@ -34,7 +34,7 @@ export const texts = {
     welcome: 'Welcome',
     graphicQuality: 'Graphic Quality',
     moods: ['Excellent', 'Good', 'Average', 'Poor', 'Terrible'],
-    volumeControl: 'Volume Control' // ★音量調節のテキストを追加
+    volumeControl: 'Volume Control'
   },
   ru: {
       pageTitle: 'Мой календарь',
@@ -52,7 +52,7 @@ export const texts = {
       welcome: 'Добро пожаловать',
       graphicQuality: 'Качество графики',
       moods: ['Отлично', 'Хорошо', 'Обычно', 'Плохо', 'Ужасно'],
-      volumeControl: 'Регулировка громкости' // ★音量調節のテキストを追加
+      volumeControl: 'Регулировка громкости'
     },
     zh: {
       pageTitle: '我的日曆',
@@ -70,7 +70,7 @@ export const texts = {
       welcome: '歡迎',
       graphicQuality: '圖像品質',
       moods: ['非常好', '好', '普通', '差', '非常差'],
-      volumeControl: '音量控制' // ★音量調節のテキストを追加
+      volumeControl: '音量控制'
     }
 };
 
@@ -131,19 +131,19 @@ export function applyLang(lang, userName = '') {
   const qualityHeading = document.querySelector('.feedback-section h3');
   if (qualityHeading) qualityHeading.textContent = t.graphicQuality;
 
+  // ▼▼▼ ここが修正箇所です ▼▼▼
   const moodLabels = document.querySelectorAll('.mood-buttons label');
   if (moodLabels.length > 0 && t.moods) {
     moodLabels.forEach((label, i) => {
-      if(t.moods[i]) {
-        // input要素は保持しつつテキストだけを更新
-        const input = label.querySelector('input') || label.previousElementSibling;
+      if (t.moods[i]) {
+        // ラベルのテキストだけを更新し、HTML構造は変更しない
         label.textContent = t.moods[i];
-        if(input) label.prepend(input);
       }
     });
   }
+  // ▲▲▲ 修正箇所ここまで ▲▲▲
 
-  // ★音量調節のテキストを適用する処理を追加
+  // 音量調節のテキストを適用する処理
   const volumeHeading = document.querySelector('.volume-section h3');
   if (volumeHeading) {
     volumeHeading.textContent = t.volumeControl;
