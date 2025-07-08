@@ -113,13 +113,45 @@
 </div>
 
 <!-- チャット機能 -->
-<button id="chatToggle">💬 チャット</button>
+<button id="chatToggle">
+    <span>💬</span>
+    <span>智能助手</span>
+</button>
 <div id="chatWindow" class="chat-window hidden">
     <div id="chatMessages" class="chat-messages"></div>
+    
+    <!-- 图片拖拽区域 -->
+    <div id="imageDropZone" class="image-drop-zone hidden">
+        <div class="drop-zone-content">
+            <div class="drop-zone-icon">📷</div>
+            <div class="drop-zone-text">拖拽图片到这里或点击上传</div>
+            <div class="drop-zone-subtext">支持 JPG, PNG, GIF 格式</div>
+        </div>
+    </div>
+    
+    <!-- 图片预览区域 -->
+    <div id="imagePreview" class="image-preview hidden">
+        <div class="preview-header">
+            <span class="preview-title">图片预览</span>
+            <button type="button" id="removeImage" class="remove-image-btn">×</button>
+        </div>
+        <img id="previewImg" src="" alt="预览图片" />
+        <div class="ocr-status">
+            <span id="ocrStatusText">准备识别图片中的文字...</span>
+            <div id="ocrProgress" class="ocr-progress hidden">
+                <div class="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+    
     <form id="chatForm">
-        <input type="text" id="userInput" placeholder="message" required />
-        <button type="button" id="micBtn" title="音声入力" style="margin-right:5px;">🎤</button>
-        <button type="submit">submit</button>
+        <div class="input-group">
+            <input type="text" id="userInput" placeholder="请告诉我您的日程安排..." />
+            <input type="file" id="imageInput" accept="image/*" style="display: none;" />
+            <button type="button" id="imageBtn" title="上传图片识别文字">📷</button>
+            <button type="button" id="micBtn" title="语音输入">🎤</button>
+            <button type="submit" id="sendBtn">发送</button>
+        </div>
     </form>
 </div>
 

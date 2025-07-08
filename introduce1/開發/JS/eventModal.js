@@ -81,16 +81,14 @@ export function showEventConfirm(eventObj, onConfirm) {
   modal.className = 'event-detail-popup';
   modal.innerHTML = `
     <div class="event-detail-modal">
-      <h3>🗓️ このイベントを追加しますか？</h3>
+      <h3>このイベントを追加しますか？</h3>
       <p><strong>開始日:</strong> ${eventObj.startDate}</p>
       <p><strong>終了日:</strong> ${eventObj.endDate || eventObj.startDate}</p>
       <p><strong>時間:</strong> ${eventObj.time}</p>
       <p><strong>場所:</strong> ${eventObj.location}</p>
       <p><strong>メモ:</strong> ${eventObj.note}</p>
-      <div class="button-row">
-        <button id="cancelAddEventBtn">キャンセル</button>
-        <button id="confirmAddEventBtn">追加</button>
-      </div>
+      <button id="confirmAddEventBtn">追加</button>
+      <button id="cancelAddEventBtn">キャンセル</button>
     </div>
   `;
   document.body.appendChild(modal);
