@@ -1,4 +1,5 @@
 import { showEventConfirm } from './eventModal.js';
+import { texts } from './lang.js';
 
 export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId }) {
   const micBtn = document.getElementById(micBtnId);
@@ -20,6 +21,57 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
   // 当前上传的图片文件
   let currentImageFile = null;
   let extractedText = '';
+  
+  // 获取当前语言设置
+  function getCurrentLanguage() {
+    return localStorage.getItem('calendarLang') || 'ja';
+  }
+  
+  // 获取当前语言的文本
+  function getLocalizedText(key, params = {}) {
+    const lang = getCurrentLanguage();
+    let text = texts[lang]?.[key] || texts.ja[key] || key;
+    
+    // 替换参数
+    Object.keys(params).forEach(param => {
+      text = text.replace(`{${param}}`, params[param]);
+    });
+    
+    return text;
+  }
+  
+  // 更新界面中的多语言文本
+  function updateInterfaceTexts() {
+    // 更新输入框占位符
+    if (userInput) {
+      userInput.placeholder = getLocalizedText('userInputPlaceholder');
+    }
+    
+    // 更新粘贴提示
+    const pasteHint = document.getElementById('pasteHint');
+    if (pasteHint) {
+      pasteHint.textContent = getLocalizedText('pasteHint');
+    }
+    
+    // 更新发送按钮文本
+    if (sendBtn) {
+      sendBtn.textContent = getLocalizedText('send');
+    }
+    
+    // 更新拖拽区域文本
+    const dropZoneText = document.querySelector('.drop-zone-text');
+    if (dropZoneText) {
+      dropZoneText.textContent = getLocalizedText('dropZoneText');
+    }
+    
+    const dropZoneSubtext = document.querySelector('.drop-zone-subtext');
+    if (dropZoneSubtext) {
+      dropZoneSubtext.textContent = getLocalizedText('dropZoneSubtext');
+    }
+  }
+  
+  // 暴露更新函数到全局，供其他模块调用
+  window.updateChatLanguage = updateInterfaceTexts;
 
   // 检查并显示按钮状态
   setTimeout(() => {
@@ -28,10 +80,13 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
     console.log('- 麦克风按钮:', micBtn ? '✅ 找到' : '❌ 未找到');
     console.log('- 发送按钮:', sendBtn ? '✅ 找到' : '❌ 未找到');
     
-    // 修正发送按钮文本
+    // 修正发送按钮文本和占位符
     if (sendBtn && sendBtn.textContent.includes('"send"')) {
-      sendBtn.textContent = '发送';
+      sendBtn.textContent = getLocalizedText('send'); // 使用发送文本
     }
+    
+    // 初始化时更新所有界面文本
+    updateInterfaceTexts();
     
     // 确保按钮可见
     if (imageBtn) {
@@ -46,11 +101,11 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
     // 动态添加粘贴提示
     const inputGroup = document.querySelector('#chatForm .input-group');
     if (inputGroup && !document.getElementById('pasteHint')) {
-      const pasteHint = document.createElement('div');
-      pasteHint.id = 'pasteHint';
-      pasteHint.className = 'paste-hint';
-      pasteHint.textContent = 'Ctrl+V 粘贴图片';
-      inputGroup.appendChild(pasteHint);
+             const pasteHint = document.createElement('div');
+       pasteHint.id = 'pasteHint';
+       pasteHint.className = 'paste-hint';
+       pasteHint.textContent = getLocalizedText('pasteHint');
+       inputGroup.appendChild(pasteHint);
       
       // 添加动态显示逻辑
       let showHintTimeout;
@@ -68,7 +123,7 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
          // 按住Ctrl键时显示粘贴提示（如果聊天窗口打开）
          else if ((e.ctrlKey || e.metaKey) && !e.repeat && chatWindow && !chatWindow.classList.contains('hidden')) {
            pasteHint.classList.add('show');
-           pasteHint.textContent = 'Ctrl+V 粘贴图片';
+           pasteHint.textContent = getLocalizedText('pasteHint');
          }
        });
        
@@ -303,7 +358,7 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
   async function performOCR(file) {
     try {
       // 显示进度
-      ocrStatusText.textContent = '正在识别图片中的文字...';
+      ocrStatusText.textContent = getLocalizedText('ocrProcessing');
       ocrProgress.classList.remove('hidden');
       
       // 添加进度动画
@@ -313,7 +368,12 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
       // 准备表单数据
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('language', 'chs'); // 中文简体
+      
+      // 根据当前语言设置OCR语言
+      const currentLang = getCurrentLanguage();
+      const ocrLanguage = texts[currentLang]?.ocrLanguage || 'eng';
+      formData.append('language', ocrLanguage);
+      
       formData.append('isOverlayRequired', 'false');
       formData.append('detectOrientation', 'true');
       formData.append('scale', 'true');
@@ -348,15 +408,15 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
         sendBtn.classList.add('has-image');
         
         // 成功状态
-        ocrStatusText.textContent = `✅ 识别成功！提取到 ${extractedText.length} 个字符`;
+        ocrStatusText.textContent = getLocalizedText('ocrSuccess', { count: extractedText.length });
         progressBar.style.width = '100%';
         
         // 显示识别结果消息
-        createAnimatedMessage(`📷 图片识别结果：${extractedText}`, 'user-message');
+        createAnimatedMessage(getLocalizedText('ocrResult', { text: extractedText }), 'user-message');
         
         // 自动提交给AI
         setTimeout(() => {
-          sendChatMessage(`请根据以下图片识别的内容创建日程：${extractedText}`);
+          sendChatMessage(getLocalizedText('ocrToAiPrompt', { text: extractedText }));
         }, 1500);
         
       } else {
@@ -365,9 +425,9 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
       
     } catch (error) {
       console.error('OCR Error:', error);
-      ocrStatusText.textContent = `❌ 识别失败：${error.message}`;
+      ocrStatusText.textContent = getLocalizedText('ocrFailed', { error: error.message });
       ocrProgress.classList.add('hidden');
-      showChatError(`图片识别失败：${error.message}`);
+      showChatError(getLocalizedText('ocrFailed', { error: error.message }));
     }
   }
 
@@ -388,14 +448,17 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
     const todayStr = new Date().toISOString().slice(0, 10);
 
     // 显示思考中的状态
-    const thinkingMsg = createAnimatedMessage('🤖 思考中...', 'assistant-message thinking-message', true);
+    const thinkingMsg = createAnimatedMessage(getLocalizedText('thinkingMessage'), 'assistant-message thinking-message', true);
+
+    // 根据当前语言获取系统提示
+    const systemPrompt = getLocalizedText('aiSystemPrompt', { todayStr });
 
     const requestBody = {
       model: modelName,
       messages: [
         {
           role: 'system',
-          content: `今日は${todayStr}です。ユーザーが話した内容からカレンダーイベントを抽出し、JSONで返してください。例: {"startDate":"2025-06-25","endDate":"2025-06-25","time":"14:00","location":"渋谷","note":"打ち合わせ"}`
+          content: systemPrompt
         },
         {
           role: 'user',
@@ -520,7 +583,7 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
         const file = item.getAsFile();
         if (file) {
           // 显示粘贴提示
-          createAnimatedMessage('📋 检测到剪贴板图片，正在处理...', 'assistant-message');
+          createAnimatedMessage(getLocalizedText('clipboardDetected'), 'assistant-message');
           
           currentImageFile = file;
           showImagePreview(file);
@@ -528,7 +591,7 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
           // 首次使用提示
           if (!localStorage.getItem('clipboard_tip_shown')) {
             setTimeout(() => {
-              createAnimatedMessage('💡 小贴士：您可以随时使用 Ctrl+V 快速粘贴截图或复制的图片！', 'assistant-message');
+              createAnimatedMessage(getLocalizedText('clipboardTip'), 'assistant-message');
               localStorage.setItem('clipboard_tip_shown', 'true');
             }, 2000);
           }
@@ -541,7 +604,7 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
     if (!hasImage && e.target !== userInput) {
       const hasText = Array.from(items).some(item => item.type === 'text/plain');
       if (!hasText) {
-        createAnimatedMessage('📋 剪贴板中没有检测到图片，请复制图片后再试', 'assistant-message');
+        createAnimatedMessage(getLocalizedText('clipboardNoImage'), 'assistant-message');
       }
     }
   }
@@ -662,11 +725,11 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
             // 3. 首次使用引导（只显示一次）
             if (!localStorage.getItem('chat_features_intro_shown')) {
               setTimeout(() => {
-                createAnimatedMessage('🎉 欢迎使用智能日程助手！', 'assistant-message');
+                createAnimatedMessage(getLocalizedText('welcomeChat'), 'assistant-message');
                 setTimeout(() => {
-                  createAnimatedMessage('💡 支持三种方式添加日程：\n📝 文字输入 • 🎤 语音输入 • 📷 图片识别', 'assistant-message');
+                  createAnimatedMessage(getLocalizedText('chatFeatures'), 'assistant-message');
                   setTimeout(() => {
-                    createAnimatedMessage('⚡ 小贴士：复制图片后按 Ctrl+V 可快速粘贴识别！', 'assistant-message');
+                    createAnimatedMessage(getLocalizedText('pasteShortcut'), 'assistant-message');
                     localStorage.setItem('chat_features_intro_shown', 'true');
                   }, 1500);
                 }, 1200);
