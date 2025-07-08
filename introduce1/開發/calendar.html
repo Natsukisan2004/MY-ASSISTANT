@@ -113,13 +113,45 @@
                     
 
 <!-- チャット機能 -->
-<button id="chatToggle">💬 チャット</button>
+<button id="chatToggle">
+    <span>💬</span>
+    <span>智能助手</span>
+</button>
 <div id="chatWindow" class="chat-window hidden">
     <div id="chatMessages" class="chat-messages"></div>
+    
+    <!-- 图片拖拽区域 -->
+    <div id="imageDropZone" class="image-drop-zone hidden">
+        <div class="drop-zone-content">
+            <div class="drop-zone-icon">📷</div>
+            <div class="drop-zone-text">拖拽图片 • 点击上传 • Ctrl+V粘贴</div>
+            <div class="drop-zone-subtext">支持 JPG, PNG, GIF 格式 • 文件大小 ≤ 1MB</div>
+        </div>
+    </div>
+    
+    <!-- 图片预览区域 -->
+    <div id="imagePreview" class="image-preview hidden">
+        <div class="preview-header">
+            <span class="preview-title">图片预览</span>
+            <button type="button" id="removeImage" class="remove-image-btn">×</button>
+        </div>
+        <img id="previewImg" src="" alt="预览图片" />
+        <div class="ocr-status">
+            <span id="ocrStatusText">准备识别图片中的文字...</span>
+            <div id="ocrProgress" class="ocr-progress hidden">
+                <div class="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+    
     <form id="chatForm">
-        <input type="text" id="userInput" placeholder="message" required />
-        <button type="button" id="micBtn" title="音声入力" style="margin-right:5px;">🎤</button>
-        <button type="submit">submit</button>
+        <div class="input-group">
+            <input type="text" id="userInput" placeholder="请告诉我您的日程安排..." />
+            <input type="file" id="imageInput" accept="image/*" style="display: none;" />
+            <button type="button" id="imageBtn" title="上传图片识别文字">📷</button>
+            <button type="button" id="micBtn" title="语音输入">🎤</button>
+            <button type="submit" id="sendBtn">“send"</button>
+        </div>
     </form>
 </div>
 
@@ -127,25 +159,58 @@
 <div id="apiSettingModal" class="modal">
   <div class="modal-content">
     <span class="close" id="closeApiSetting">&times;</span>
-    <h3>OpenAI API設定</h3>
+    <h3>AI & OCR API設定</h3>
     <form id="apiSettingForm">
-      <div class="form-group">
-        <label>API URL</label>
-        <input type="text" id="apiUrlInput" placeholder="https://openrouter.ai/api/v1/chat/completions" required>
+      <div class="api-section">
+        <h4>🤖 AI聊天设置</h4>
+        <div class="form-group">
+          <label>API URL</label>
+          <input type="text" id="apiUrlInput" placeholder="https://openrouter.ai/api/v1/chat/completions" required>
+          <small class="form-help">支持OpenRouter、OpenAI等兼容API</small>
+        </div>
+        <div class="form-group">
+          <label>API Key</label>
+          <input type="password" id="apiKeyInput" placeholder="sk-or-..." required>
+          <small class="form-help">您的AI服务API密钥</small>
+        </div>
+        <div class="form-group">
+          <label>Model</label>
+          <input type="text" id="modelInput" placeholder="deepseek/deepseek-r1-0528:free" required>
+          <small class="form-help">推荐: deepseek/deepseek-r1, openai/gpt-4</small>
+        </div>
       </div>
-      <div class="form-group">
-        <label>API Key</label>
-        <input type="password" id="apiKeyInput" placeholder="sk-or-..." required>
+      
+      <div class="api-section">
+        <h4>📷 OCR图片识别设置</h4>
+        <div class="form-group">
+          <label>OCR API Key</label>
+          <input type="password" id="ocrApiKeyInput" placeholder="免费版有限制，建议申请专属密钥">
+          <small class="form-help">
+            OCR.space API密钥 - 
+            <a href="https://ocr.space/ocrapi" target="_blank" style="color: #667eea;">免费申请</a>
+            (可选，系统提供免费额度)
+          </small>
+        </div>
       </div>
-      <div class="form-group">
-        <label>Model</label>
-        <input type="text" id="modelInput" placeholder="deepseek/deepseek-r1-0528:free" required>
+      
+      <div class="api-section">
+        <h4>🌐 语言设置</h4>
+        <div class="form-group">
+          <label>OCR & AI 语言</label>
+          <select id="aiLanguageSelect">
+            <option value="ja">🇯🇵 日本語 (Japanese)</option>
+            <option value="en">🇺🇸 English</option>
+            <option value="zh">🇨🇳 中文 (Chinese)</option>
+          </select>
+          <small class="form-help">同时设置OCR识别语言和AI回复语言</small>
+        </div>
       </div>
-      <button type="submit">保存</button>
+      
+      <button type="submit">保存设置</button>
     </form>
   </div>
 </div>
-<button id="openApiSetting" style="position:fixed;bottom:20px;left:20px;z-index:1001;">API設定</button>
+<button id="openApiSetting" style="position:fixed;bottom:20px;left:20px;z-index:1001;">⚙️ API设置</button>
 
 <script type="module" src="JS/main.js"></script>
 <script>

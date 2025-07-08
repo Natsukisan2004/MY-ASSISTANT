@@ -167,20 +167,29 @@ body {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background-color: #1a73e8;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border: none;
-    padding: 12px 18px;
-    border-radius: 30px;
+    padding: 16px 20px;
+    border-radius: 50px;
     font-size: 16px;
+    font-weight: 600;
     cursor: pointer;
     z-index: 1000;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-    transition: background-color 0.2s, transform 0.2s;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
+
 #chatToggle:hover {
-    background-color: #1669c1;
-    transform: translateY(-2px);
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
+}
+
+#chatToggle:active {
+    transform: translateY(-1px) scale(1.02);
 }
 
 #openApiSetting {
@@ -205,47 +214,524 @@ body {
 
 .chat-window {
     position: fixed;
-    bottom: 70px;
+    bottom: 90px;
     right: 20px;
-    width: 300px;
-    max-height: 400px;
-    background: #fff;
-    border: 1px solid #ccc;
-    border-radius: 10px;
+    width: 480px;
+    max-height: 500px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 20px;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
     z-index: 999;
-    padding: 10px;
-    backdrop-filter: blur(6px);
+    overflow: hidden;
+    animation: slideInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .chat-messages {
     flex: 1;
     overflow-y: auto;
-    margin-bottom: 10px;
-    font-size: 14px;
+    padding: 20px;
     display: flex;
     flex-direction: column;
+    gap: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(102, 126, 234, 0.3) transparent;
 }
 
-.chat-messages div {
-    margin-bottom: 5px;
+.chat-messages::-webkit-scrollbar {
+    width: 4px;
 }
 
-.chat-window input[type="text"] {
-    width: calc(100% - 60px);
-    padding: 5px;
+.chat-messages::-webkit-scrollbar-track {
+    background: transparent;
 }
 
-.chat-window button {
-    width: 50px;
-    padding: 5px;
+.chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(102, 126, 234, 0.3);
+    border-radius: 2px;
 }
 
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: rgba(102, 126, 234, 0.5);
+}
+
+/* 消息泡泡样式 */
+.chat-messages .message {
+    max-width: 85%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    line-height: 1.5;
+    word-wrap: break-word;
+    position: relative;
+    animation: messageSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    font-size: 14px;
+}
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.chat-messages .user-message {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 6px;
+    margin-left: auto;
+}
+
+.chat-messages .user-message::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: -6px;
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+    border-left-color: #764ba2;
+    border-bottom: 0;
+}
+
+.chat-messages .assistant-message {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 30%, #4facfe 100%);
+    color: white;
+    align-self: flex-start;
+    border-bottom-left-radius: 6px;
+    margin-right: auto;
+}
+
+.chat-messages .assistant-message::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: -6px;
+    width: 0;
+    height: 0;
+    border: 6px solid transparent;
+    border-right-color: #f5576c;
+    border-bottom: 0;
+}
+
+.chat-messages .thinking-message {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+    color: #333;
+    align-self: flex-start;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.chat-messages .error-message {
+    background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+    color: #d32f2f;
+    align-self: center;
+    text-align: center;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+/* 聊天输入区域 */
+#chatForm {
+    display: flex;
+    gap: 8px;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+#chatForm input[type="text"] {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: 25px;
+    background: rgba(255, 255, 255, 0.9);
+    font-size: 14px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+#chatForm input[type="text"]:focus {
+    border-color: rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    background: white;
+}
+
+#chatForm input[type="text"]::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+}
+
+#chatForm button[type="submit"] {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    color: white;
+    padding: 12px 16px;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    min-width: 80px;
+}
+
+#chatForm button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+#chatForm button[type="submit"]:active {
+    transform: translateY(0);
+}
+
+/* 麦克风按钮 */
+#micBtn {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+    flex-shrink: 0;
+    z-index: 10;
+    position: relative;
+}
+
+#micBtn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+}
+
+#micBtn:active {
+    transform: scale(0.95);
+}
+
+#micBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 隐藏状态动画 */
 .hidden {
-    display: none;
+    display: none !important;
 }
+
+/* 聊天窗口关闭动画 */
+.chat-window.closing {
+    animation: slideOutDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideOutDown {
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(30px) scale(0.9);
+    }
+}
+
+/* 聊天输入区域更新 */
+#chatForm .input-group {
+    display: flex;
+    gap: 8px;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    align-items: center;
+    min-height: 70px;
+}
+
+/* 图片上传按钮 */
+#imageBtn {
+    background: linear-gradient(135deg, #ff9500 0%, #ff6b35 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 15px rgba(255, 149, 0, 0.3);
+    flex-shrink: 0;
+    z-index: 10;
+    position: relative;
+}
+
+#imageBtn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(255, 149, 0, 0.4);
+}
+
+#imageBtn:active {
+    transform: scale(0.95);
+}
+
+/* 图片拖拽区域 */
+.image-drop-zone {
+    margin: 16px 20px;
+    border: 2px dashed rgba(102, 126, 234, 0.3);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    background: rgba(102, 126, 234, 0.05);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.image-drop-zone.drag-over {
+    border-color: rgba(102, 126, 234, 0.6);
+    background: rgba(102, 126, 234, 0.1);
+    transform: scale(1.02);
+}
+
+.drop-zone-content {
+    pointer-events: none;
+}
+
+.drop-zone-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+    opacity: 0.7;
+}
+
+.drop-zone-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.drop-zone-subtext {
+    font-size: 12px;
+    color: #666;
+}
+
+/* 粘贴快捷键提示 */
+.paste-hint {
+    position: absolute;
+    top: -40px;
+    right: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0;
+    transform: translateY(15px) scale(0.8);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    z-index: 25;
+    white-space: nowrap;
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.paste-hint.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+    }
+    50% {
+        box-shadow: 0 12px 30px rgba(102, 126, 234, 0.5);
+    }
+}
+
+.paste-hint::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    right: 20px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 6px solid #764ba2;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+
+
+/* 图片预览区域 */
+.image-preview {
+    margin: 16px 20px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    animation: slideInDown 0.3s ease;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.preview-title {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.remove-image-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.remove-image-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+#previewImg {
+    width: 100%;
+    max-height: 200px;
+    object-fit: contain;
+    display: block;
+}
+
+.ocr-status {
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+#ocrStatusText {
+    font-size: 13px;
+    color: #666;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.ocr-progress {
+    width: 100%;
+    height: 4px;
+    background: rgba(102, 126, 234, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    width: 0%;
+    transition: width 0.3s ease;
+    animation: progressPulse 1.5s infinite;
+}
+
+@keyframes progressPulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+    .chat-window {
+        width: calc(100vw - 40px);
+        right: 20px;
+        left: 20px;
+        max-height: 60vh;
+    }
+    
+    #chatToggle {
+        bottom: 15px;
+        right: 15px;
+        padding: 14px 18px;
+        font-size: 14px;
+    }
+    
+    .image-drop-zone {
+        margin: 12px 16px;
+        padding: 16px;
+    }
+    
+    .drop-zone-icon {
+        font-size: 36px;
+    }
+    
+    #imageBtn, #micBtn {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+}
+
+
 
 .event-detail-popup {
     position: fixed;
@@ -393,6 +879,86 @@ body {
     font-size: 24px;
     cursor: pointer;
   }
+
+/* API设置模态框样式 */
+.api-section {
+    margin-bottom: 24px;
+    padding: 16px;
+    border: 1px solid rgba(102, 126, 234, 0.1);
+    border-radius: 8px;
+    background: rgba(102, 126, 234, 0.02);
+}
+
+.api-section h4 {
+    margin: 0 0 16px 0;
+    color: #333;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #333;
+    font-size: 14px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-help {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+}
+
+.form-help a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.form-help a:hover {
+    text-decoration: underline;
+}
+
+#apiSettingForm button[type="submit"] {
+    width: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 8px;
+}
+
+#apiSettingForm button[type="submit"]:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
   
   /* ...existing code... */
 .today-circle {
@@ -551,73 +1117,5 @@ body {
     accent-color: #4caf50; /* スライダーの色（対応ブラウザのみ） */
   }
   
-/* Chat message bubbles */
-.chat-messages .message {
-    padding: 6px 10px;
-    margin-bottom: 6px;
-    border-radius: 8px;
-    line-height: 1.4;
-    word-wrap: break-word;
-}
-.chat-messages .user-message {
-    background-color: #e3f2fd;
-    align-self: flex-end;
-    text-align: right;
-}
-.chat-messages .assistant-message {
-    background-color: #e8f5e9;
-    align-self: flex-start;
-}
-.chat-messages .error-message {
-    background-color: #ffebee;
-    color: #c62828;
-}
-.chat-messages .log-message {
-    background-color: #f3e5f5;
-    font-size: 12px;
-}
 
-/* Chat form layout */
-#chatForm {
-    display: flex;
-    gap: 6px;
-}
-#chatForm input[type="text"] {
-    flex: 1;
-    padding: 6px 8px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-}
-#chatForm button[type="submit"] {
-    background-color: #4caf50;
-    border: none;
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-#chatForm button[type="submit"]:hover {
-    background-color: #43a047;
-}
-
-/* Mic button */
-#micBtn {
-    background-color: #ff5252;
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.2s;
-}
-#micBtn:hover {
-    background-color: #e04848;
-    transform: scale(1.05);
-}
   

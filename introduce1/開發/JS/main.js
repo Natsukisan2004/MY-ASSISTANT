@@ -154,6 +154,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const apiUrlInput = document.getElementById('apiUrlInput');
   const apiKeyInput = document.getElementById('apiKeyInput');
   const modelInput = document.getElementById('modelInput');
+  const ocrApiKeyInput = document.getElementById('ocrApiKeyInput');
+  const aiLanguageSelect = document.getElementById('aiLanguageSelect');
 
   if (openApiSettingBtn && apiSettingModal) {
     // ボタンでモーダル表示
@@ -162,6 +164,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       apiUrlInput.value = localStorage.getItem('openai_api_url') || 'https://openrouter.ai/api/v1/chat/completions';
       apiKeyInput.value = localStorage.getItem('openai_api_key') || '';
       modelInput.value = localStorage.getItem('openai_model') || 'deepseek/deepseek-r1-0528:free';
+      ocrApiKeyInput.value = localStorage.getItem('ocr_api_key') || '';
+      
+      // 设置语言选择（如果没有设置，使用当前界面语言）
+      const currentLang = localStorage.getItem('calendarLang') || 'ja';
+      if (aiLanguageSelect) {
+        aiLanguageSelect.value = currentLang;
+      }
+      
       apiSettingModal.classList.add('show');
     });
   }
@@ -188,8 +198,38 @@ document.addEventListener('DOMContentLoaded', async () => {
       localStorage.setItem('openai_api_url', apiUrlInput.value.trim());
       localStorage.setItem('openai_api_key', apiKeyInput.value.trim());
       localStorage.setItem('openai_model', modelInput.value.trim());
+      
+      // OCR API Key保存（空でも保存）
+      localStorage.setItem('ocr_api_key', ocrApiKeyInput.value.trim());
+      
+      // 保存语言设置，同时更新界面语言
+      if (aiLanguageSelect) {
+        const selectedLang = aiLanguageSelect.value;
+        localStorage.setItem('calendarLang', selectedLang);
+        
+        // 立即应用语言设置
+        import('./lang.js').then(({ applyLang }) => {
+          const userName = localStorage.getItem('userName') || '';
+          applyLang(selectedLang, userName);
+          
+          // 更新聊天界面的语言
+          if (window.updateChatLanguage) {
+            window.updateChatLanguage();
+          }
+        });
+      }
+      
       apiSettingModal.classList.remove('show');
-      alert('API設定を保存しました');
+      
+      // 根据选择的语言显示不同的成功消息
+      const langMessages = {
+        ja: '🎉 AI & OCR API設定が保存されました！\n\n💡 ヒント：\n- 画像認識機能が有効です\n- ドラッグ＆ドロップまたはクリックで画像をアップロード\n- 自動的にテキストを認識して予定を作成します',
+        en: '🎉 AI & OCR API settings saved!\n\n💡 Tips:\n- Image recognition is now active\n- Drag & drop or click to upload images\n- System will auto-recognize text and create events',
+        zh: '🎉 AI & OCR API设置已保存！\n\n💡 提示：\n- 图片识别功能已激活\n- 可通过拖拽或点击上传图片\n- 系统将自动识别文字并创建日程'
+      };
+      
+      const currentLang = localStorage.getItem('calendarLang') || 'ja';
+      alert(langMessages[currentLang] || langMessages.ja);
     });
   }
   // ===== 追加ここまで =====
