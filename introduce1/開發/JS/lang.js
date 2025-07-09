@@ -14,7 +14,13 @@ export const texts = {
     save: '保存',
     send: '送信',
     delete: '削除',
-    welcome: 'ようこそ',
+    today: '今日に戻る',
+    day: '日',
+    week: '週',
+    month: '月',
+    search: '検索',
+    searchPlaceholder: '予定を検索...',
+    welcome: 'ようこそ {userName} さん',
     graphicQuality: 'グラフィック品質',
     moods: ['すごく良い', '良い', '普通', '悪い', 'すごく悪い'],
     volumeControl: '音量調節',
@@ -52,7 +58,13 @@ export const texts = {
     save: 'Save',
     send: 'Send',
     delete: 'Delete',
-    welcome: 'Welcome',
+    today: 'Today',
+    day: 'Day',
+    week: 'Week',
+    month: 'Month',
+    search: 'Search',
+    searchPlaceholder: 'Search events...',
+    welcome: 'Welcome, {userName}',
     graphicQuality: 'Graphic Quality',
     moods: ['Excellent', 'Good', 'Average', 'Poor', 'Terrible'],
     volumeControl: 'Volume Control',
@@ -89,7 +101,13 @@ export const texts = {
       addEvent: 'Добавить событие',
       save: 'Сохранить',
       delete: 'Удалить',
-      welcome: 'Добро пожаловать',
+      today: 'Сегодня',
+      day: 'День',
+      week: 'Неделя',
+      month: 'Месяц',
+      search: 'Поиск',
+      searchPlaceholder: 'Поиск событий...',
+      welcome: 'Добро пожаловать, {userName}',
       graphicQuality: 'Качество графики',
       moods: ['Отлично', 'Хорошо', 'Обычно', 'Плохо', 'Ужасно'],
       volumeControl: 'Регулировка громкости'
@@ -108,7 +126,13 @@ export const texts = {
       save: '儲存',
       send: '發送',
       delete: '刪除',
-      welcome: '歡迎',
+      today: '回到今天',
+      day: '日',
+      week: '週',
+      month: '月',
+      search: '搜索',
+      searchPlaceholder: '搜索日程...',
+      welcome: '歡迎, {userName}',
       graphicQuality: '圖像品質',
       moods: ['非常好', '好', '普通', '差', '非常差'],
       volumeControl: '音量控制',
@@ -154,6 +178,7 @@ export function applyLang(lang, userName = '') {
       });
   }
 
+  // --- ナビゲーション ---
   if (document.querySelector('a[href="calendar.html"]')) {
     document.querySelector('a[href="calendar.html"]').textContent = t.calendar;
   }
@@ -172,6 +197,8 @@ export function applyLang(lang, userName = '') {
   if (document.getElementById('openApiSetting')) {
     document.getElementById('openApiSetting').textContent = t.apiSetting;
   }
+
+  // --- モーダル ---
   const eventModalTitle = document.querySelector('#eventModal h3');
   if (eventModalTitle) {
     eventModalTitle.textContent = t.addEvent;
@@ -183,27 +210,52 @@ export function applyLang(lang, userName = '') {
   if (document.getElementById('deleteEventBtn')) {
     document.getElementById('deleteEventBtn').textContent = t.delete;
   }
+
+  // --- ウェルカムメッセージ ---
   if (document.getElementById('welcomeMsg')) {
-    const welcomeMessage = texts[lang].welcome;
-    const userDisplayName = userName || localStorage.getItem("userName") || "";
-    document.getElementById('welcomeMsg').textContent = `${welcomeMessage} ${userDisplayName} さん`;
+  const userDisplayName = userName || localStorage.getItem("userName") || "";
+  // welcomeテンプレートの{userName}を実際のユーザー名に置き換える
+  const welcomeMessage = t.welcome.replace('{userName}', userDisplayName);
+  document.getElementById('welcomeMsg').textContent = welcomeMessage;
+}
+
+
+  // ▼▼▼【ここからが正しい構造】▼▼▼
+
+  // --- コントロールボタン ---
+  if (document.getElementById('todayBtn')) {
+    document.getElementById('todayBtn').textContent = t.today;
   }
+  if (document.getElementById('searchBtn')) {
+    document.getElementById('searchBtn').textContent = t.search;
+  }
+  if (document.getElementById('searchInput')) {
+    document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+  }
+  // 表示切替ボタン（日・週・月）
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    const view = btn.dataset.view;
+    if (t[view]) {
+      btn.textContent = t[view];
+    }
+  });
+
+  // --- 設定ページの要素 ---
+  // グラフィック品質
   const qualityHeading = document.querySelector('.feedback-section h3');
   if (qualityHeading) qualityHeading.textContent = t.graphicQuality;
 
-  // ▼▼▼ ここが修正箇所です ▼▼▼
+  // 操作性の評価
   const moodLabels = document.querySelectorAll('.mood-buttons label');
   if (moodLabels.length > 0 && t.moods) {
     moodLabels.forEach((label, i) => {
       if (t.moods[i]) {
-        // ラベルのテキストだけを更新し、HTML構造は変更しない
         label.textContent = t.moods[i];
       }
     });
   }
-  // ▲▲▲ 修正箇所ここまで ▲▲▲
 
-  // 音量調節のテキストを適用する処理
+  // 音量調節
   const volumeHeading = document.querySelector('.volume-section h3');
   if (volumeHeading) {
     volumeHeading.textContent = t.volumeControl;

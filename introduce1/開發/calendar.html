@@ -36,28 +36,45 @@
     
 </script>
 
-<div id="welcomeMsg"></div>
+<div class="welcome-area">
+  <div id="welcomeMsg"></div>
+
+  <div class="controls-group">
+    <div class="search-form-container">
+        <input type="search" id="searchInput" placeholder="予定を検索...">
+        <button id="searchBtn">検索</button>
+    </div>
+    <div class="view-btn-group">
+      <button class="view-btn" data-view="day">日</button>
+      <button class="view-btn" data-view="week">週</button>
+      <button class="view-btn active" data-view="month">月</button>
+    </div>
+    <button id="todayBtn" class="button-primary">今日に戻る</button>
+  </div>
+</div>
 
 <div class="wrapper">
     <div class="calendar-container">
         <div class="calendar-header">
-            <button id="prevMonth">←</button>
+            <button id="prevBtn">←</button>
             <h2 id="current-date"></h2>
-            <button id="nextMonth">→</button>
+            <button id="nextBtn">→</button>
         </div>
         <div class="weekdays">
-          <div>日</div>
-          <div>月</div>
-          <div>火</div>
-          <div>水</div>
-          <div>木</div>
-          <div>金</div>
-          <div>土</div>
-      </div>
+            <div>日</div>
+            <div>月</div>
+            <div>火</div>
+            <div>水</div>
+            <div>木</div>
+            <div>金</div>
+            <div>土</div>
+        </div>
       
-      <div class="weekdays">
-          </div>
-        <div id="calendar" class="calendar"></div>
+        <div id="calendar" class="calendar-grid view-container"></div>
+        <div id="week-view" class="view-container hidden"></div>
+        <div id="day-view" class="view-container hidden"></div>
+    </div>
+    
     </div>
     
     <!-- 事件添加モーダル -->
@@ -273,50 +290,15 @@
     }
   });
 </script>
-<script>
-  // 言語設定機能
-  document.addEventListener('DOMContentLoaded', () => {
-    const langSelect = document.getElementById('langSelect');
-    if (!langSelect) return;
 
-    // 保存された言語を適用
-    const savedLang = localStorage.getItem('calendarLang') || 'ja';
-    langSelect.value = savedLang;
-    
-    function applyLang(lang) {
-      document.querySelector('a[href="calendar.html"]').textContent = texts[lang].calendar;
-      document.querySelector('a[href="profile.html"]').textContent = texts[lang].profile;
-      document.querySelector('a[href="settings.html"]').textContent = texts[lang].settings;
-      document.getElementById('changeHeaderImgBtn').textContent = texts[lang].changeHeader;
-      document.getElementById('chatToggle').textContent = texts[lang].chat;
-      document.getElementById('openApiSetting').textContent = texts[lang].apiSetting;
-      document.querySelector('#eventModal h3').textContent = texts[lang].addEvent;
-      document.querySelector('#eventForm button[type="submit"]').textContent = texts[lang].save;
-      document.getElementById('deleteEventBtn').textContent = texts[lang].delete;
-      // ウェルカムメッセージ
-      const userName = localStorage.getItem("userName") || "";
-      document.getElementById("welcomeMsg").textContent = `${texts[lang].welcome} ${userName} さん`;
-    }
-
-    // 初期適用
-    applyLang(savedLang);
-
-    // 言語変更時
-    langSelect.addEventListener('change', (e) => {
-      const lang = e.target.value;
-      localStorage.setItem('calendarLang', lang);
-      applyLang(lang);
-    });
-  });
-
-</script>
-<script type="module">
-  import { applyLang } from './JS/lang.js';
-
-  const savedLang = localStorage.getItem('calendarLang') || 'ja';
-  const userName = localStorage.getItem('userName') || '';
-  applyLang(savedLang, userName);
-</script>
+<div id="searchResultsModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>検索結果</h3>
+        <div id="searchResultsContainer">
+            </div>
+    </div>
+</div>
 
 </body>
 </html>

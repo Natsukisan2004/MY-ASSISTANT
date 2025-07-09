@@ -2,10 +2,13 @@ import { initAuth, onAuthReady } from './auth.js';
 import { loadEvents, saveEvent, updateEvent } from './eventStorage.js'; // updateEvent を追加
 import {
   createCalendar,
+  createWeekView, 
+  createDayView,
   setCurrentDate,
   getCurrentDate,
   setEvents,
-  getEvents
+  getEvents,
+  updateDateHeader
 } from './calendar.js';
 import {
   openEventModal,
@@ -14,6 +17,9 @@ import {
   showEventConfirm
 } from './eventModal.js';
 import { initChatAssistant } from './chatAssistant.js';
+import { applyLang } from './lang.js';
+
+let currentView = 'month';
 
 // 【追加】Firebaseから最新イベントを取得しカレンダーを再描画する関数
 export async function refreshCalendar() {
@@ -23,26 +29,21 @@ export async function refreshCalendar() {
   try {
     const loadedEvents = await loadEvents(userUId);
     setEvents(loadedEvents);
-    createCalendar();
+    renderCurrentView();
   } catch (error) {
     console.error('❌ カレンダーの更新に失敗しました', error);
   }
 }
 
-// 月の切り替え
-document.getElementById('prevMonth').onclick = () => {
-  const current = getCurrentDate();
-  current.setMonth(current.getMonth() - 1);
-  setCurrentDate(current);
-  createCalendar();
-};
-
-document.getElementById('nextMonth').onclick = () => {
-  const current = getCurrentDate();
-  current.setMonth(current.getMonth() + 1);
-  setCurrentDate(current);
-  createCalendar();
-};
+/**
+ * 現在のビューに応じて、対応する描画関数を呼び出す
+ */
+function renderCurrentView() {
+  updateDateHeader(currentView);
+  if (currentView === 'month') createCalendar();
+  else if (currentView === 'week') createWeekView();
+  else createDayView();
+}
 
 // モーダル関数をグローバル化（calendar.jsなど他からも使えるように）
 window.openEventModal = openEventModal;
@@ -97,15 +98,154 @@ eventForm.onsubmit = async function (e) {
 
 // ページロード後の初期化
 document.addEventListener('DOMContentLoaded', async () => {
+  // 各ビューのHTML要素をオブジェクトとして保持
+  const views = {
+    month: document.getElementById('calendar'),
+    week: document.getElementById('week-view'),
+    day: document.getElementById('day-view')
+  };
+
+  /**
+   * 表示を切り替える関数
+   */
+function switchView(view) {
+  currentView = view;
+  for (const key in views) {
+    views[key].classList.toggle('hidden', key !== view);
+  }
+  viewButtons.forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === view);
+  });
+
+  // ▼▼▼【ここから追加】表示モードに応じてクラスを付け外し ▼▼▼
+  const container = document.querySelector('.calendar-container');
+  if (view === 'month') {
+    // 月表示のときは、高さ固定クラスを削除
+    container.classList.remove('fixed-height-view');
+  } else {
+    // 日・週表示のときは、高さ固定クラスを追加
+    container.classList.add('fixed-height-view');
+  }
+    renderCurrentView();
+  }
+
+  // --- イベントリスナー設定 ---
+  const viewButtons = document.querySelectorAll('.view-btn');
+  viewButtons.forEach(button => {
+    button.addEventListener('click', () => switchView(button.dataset.view));
+  });
+
+  document.getElementById('prevBtn').onclick = () => {
+    const current = getCurrentDate();
+    if (currentView === 'month') current.setMonth(current.getMonth() - 1);
+    else if (currentView === 'week') current.setDate(current.getDate() - 7);
+    else current.setDate(current.getDate() - 1);
+    setCurrentDate(current);
+    renderCurrentView();
+  };
+
+  document.getElementById('nextBtn').onclick = () => {
+    const current = getCurrentDate();
+    if (currentView === 'month') current.setMonth(current.getMonth() + 1);
+    else if (currentView === 'week') current.setDate(current.getDate() + 7);
+    else current.setDate(current.getDate() + 1);
+    setCurrentDate(current);
+    renderCurrentView();
+  };
+
+  document.getElementById('todayBtn').onclick = () => {
+    setCurrentDate(new Date());
+    renderCurrentView();
+  };
+
+const searchInput = document.getElementById('searchInput');
+  const searchBtn = document.getElementById('searchBtn');
+  const searchResultsModal = document.getElementById('searchResultsModal');
+  const searchResultsContainer = document.getElementById('searchResultsContainer');
+  const searchModalCloseBtn = searchResultsModal.querySelector('.close');
+
+  /**
+   * キーワードでイベントを検索し、結果を表示する
+   */
+  function performSearch() {
+      const keyword = searchInput.value.trim().toLowerCase();
+      if (!keyword) {
+          alert('検索キーワードを入力してください。');
+          return;
+      }
+
+      const allEvents = getEvents();
+      const results = allEvents.filter(event => {
+          const name = (event.eventName || '').toLowerCase();
+          const location = (event.location || '').toLowerCase();
+          const note = (event.note || '').toLowerCase();
+          return name.includes(keyword) || location.includes(keyword) || note.includes(keyword);
+      });
+
+      displaySearchResults(results);
+  }
+
+  /**
+   * 検索結果をモーダルに表示する
+   */
+  function displaySearchResults(results) {
+      searchResultsContainer.innerHTML = ''; // 結果をクリア
+
+      if (results.length === 0) {
+          searchResultsContainer.innerHTML = '<p>該当する予定は見つかりませんでした。</p>';
+      } else {
+          // 日付の昇順に並び替え
+          results.sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+          
+          results.forEach(event => {
+              const item = document.createElement('div');
+              item.className = 'search-result-item';
+              item.innerHTML = `
+                  <div class="search-result-title">${event.eventName}</div>
+                  <div class="search-result-date">${event.startDate}</div>
+              `;
+              // 結果をクリックしたら、その予定の日付に移動
+              item.addEventListener('click', () => {
+                  setCurrentDate(new Date(event.startDate));
+                  renderCurrentView(); // カレンダーを再描画
+                  searchResultsModal.classList.remove('show'); // モーダルを閉じる
+              });
+              searchResultsContainer.appendChild(item);
+          });
+      }
+
+      searchResultsModal.classList.add('show'); // モーダルを表示
+  }
+
+  // 検索ボタンのクリックイベント
+  searchBtn.addEventListener('click', performSearch);
+
+  // Enterキーでも検索を実行
+  searchInput.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') {
+          performSearch();
+      }
+  });
+
+  // 検索モーダルのクローズ処理
+  searchModalCloseBtn.addEventListener('click', () => {
+      searchResultsModal.classList.remove('show');
+  });
+  searchResultsModal.addEventListener('click', (e) => {
+      if (e.target === searchResultsModal) {
+          searchResultsModal.classList.remove('show');
+      }
+  });
+
+  // --- 初期化処理 ---
   initAuth();
-
   onAuthReady(async (userUId, userName) => {
-    document.getElementById("welcomeMsg").textContent = `ようこそ ${userName} さん`;
-
+   const savedLang = localStorage.getItem('calendarLang') || 'ja';
+  applyLang(savedLang, userName); // 正しい言語設定を適用
     try {
       const loadedEvents = await loadEvents(userUId);
       setEvents(loadedEvents);
-      createCalendar();
+      renderCurrentView(); // 最初の描画
     } catch (error) {
       console.error('❌ イベント読み込みに失敗しました', error);
     }
@@ -131,7 +271,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const events = getEvents();
       events.push(confirmedEvent);
       await saveEvent(userUId, confirmedEvent);
-      createCalendar();
+      await refreshCalendar();
       console.log('✅ AIからの予定が保存されました:', confirmedEvent);
     } catch (error) {
       console.error('❌ AIイベント保存失敗:', error);
