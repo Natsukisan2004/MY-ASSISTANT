@@ -1,4 +1,4 @@
-import { showEventConfirm } from './eventModal.js';
+import { showEventConfirm, showUpdateEventConfirm, showDeleteEventConfirm } from './eventModal.js';
 import { texts } from './lang.js';
 import { updateEvent, deleteEvent, loadEvents } from './eventStorage.js';
 import { setEvents, getEvents } from './calendar.js';
@@ -496,9 +496,30 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
         d.setDate(d.getDate() + 1);
         return d.toISOString().slice(0, 10);
       }
-      if (/后天/.test(text)) {
+      if (/后天|後天/.test(text)) {
         const d = new Date();
         d.setDate(d.getDate() + 2);
+        return d.toISOString().slice(0, 10);
+      }
+      // 支持日文"明日""明後日"
+      if (/明日/.test(text)) {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        return d.toISOString().slice(0, 10);
+      }
+      if (/明後日/.test(text)) {
+        const d = new Date();
+        d.setDate(d.getDate() + 2);
+        return d.toISOString().slice(0, 10);
+      }
+      // 支持"今日""昨日"
+      if (/今日/.test(text)) {
+        const d = new Date();
+        return d.toISOString().slice(0, 10);
+      }
+      if (/昨日/.test(text)) {
+        const d = new Date();
+        d.setDate(d.getDate() - 1);
         return d.toISOString().slice(0, 10);
       }
       return null;
@@ -506,29 +527,46 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
     const userInputText = userInput.value.trim();
     const targetDate = extractDateFromText(userInputText);
     let eventsContext = '';
-    // 调试输出：用户输入、目标日期、当天事件、拼接的prompt
-    console.log('【AI调试】用户输入:', userInputText);
-    console.log('【AI调试】目标日期:', targetDate);
+    // === 详细的调试日志 ===
+    console.log('🔍 === AI处理开始 ===');
+    console.log('📝 用户输入:', userInputText);
+    console.log('📅 目标日期:', targetDate || '❌ 未识别');
+    
     if (targetDate) {
       const dayEvents = getEvents().filter(ev => ev.startDate === targetDate);
-      console.log('【AI调试】全部事件:', getEvents()); // 新增调试日志
-      console.log('【AI调试】当天事件:', dayEvents);
+      console.log('📋 全部事件数量:', getEvents().length);
+      console.log('🎯 目标日期事件数量:', dayEvents.length);
+      
+      if (dayEvents.length > 0) {
+        console.log('📋 目标日期事件详情:');
+        dayEvents.forEach((ev, index) => {
+          console.log(`   ${index + 1}. ID: ${ev._id}, 名称: "${ev.eventName}", 时间: ${ev.startTime || '无'}, 地点: ${ev.location || '无'}, 备注: "${ev.note || '无'}"`);
+        });
+      } else {
+        console.log('⚠️  目标日期无事件');
+      }
+      
       eventsContext = dayEvents.length > 0
         ? '\n该日事件列表：\n' + dayEvents.map(ev => `ID: ${ev._id}, 名称: ${ev.eventName}, 备注: ${ev.note}, 时间: ${ev.startTime || ''}, 地点: ${ev.location || ''}`).join('\n')
         : '\n该日没有事件。';
-      console.log('【AI调试】事件列表文本:', eventsContext);
     } else {
+      console.log('❌ 日期识别失败 - 可能原因:');
+      console.log('   - 输入格式不支持 (如: "後天" 需要支持繁体)');
+      console.log('   - 日期关键词未添加 (如: "明後日" 需要添加日文支持)');
+      console.log('   - 输入内容不包含日期信息');
       eventsContext = '\n未能识别日期，无法提供事件列表。';
-      console.log('【AI调试】事件列表文本:', eventsContext);
     }
+    
+    console.log('📤 发送给AI的事件上下文:', eventsContext);
+    console.log('🔍 === AI处理开始 ===');
     // === END ===
 
     // === 优化prompt，指令更明确 ===
     const aiLang = localStorage.getItem('calendarLang') || 'zh';
     const aiDeleteTip = {
-      zh: '\n请根据用户输入，查找事件名或备注与用户输入内容高度相关的事件，如果有则返回{"action":"delete_event","_id":"事件ID"}，如果没有请返回空JSON {}。请严格只返回一行JSON，不要有任何解释、注释、代码块、markdown、标签等内容，只能输出纯JSON。',
-      ja: '\nユーザー入力と一致するイベント名またはメモがある場合のみ{"action":"delete_event","_id":"イベントID"}を返し、なければ空のJSON {} を返してください。必ず1行のJSONのみを返し、説明やコードブロックは禁止。',
-      en: '\nOnly if the event name or note highly matches the user input, return {"action":"delete_event","_id":"eventID"}, otherwise return empty JSON {}. Strictly return only one line of JSON, no explanation, comments, code block, markdown or tags.'
+      zh: '\n删除规则：用户说"不去了/取消/やっぱり"且有事件→{"action":"delete_event","_id":"事件ID"}。修改规则：用户说"改成/下午四点"且有事件→{"action":"update_event","_id":"事件ID","startTime":"16:00"}。无事件才返回{}。',
+      ja: '\n削除ルール：「行かない/キャンセル/やっぱり」+イベントあり→{"action":"delete_event","_id":"イベントID"}。変更ルール：「午後4時/16時」+イベントあり→{"action":"update_event","_id":"イベントID","startTime":"16:00"}。イベントなしのみ{}。',
+      en: '\nDelete rule: "not going/cancel/やっぱり"+events→{"action":"delete_event","_id":"eventID"}. Update rule: "4pm/afternoon"+events→{"action":"update_event","_id":"eventID","startTime":"16:00"}. Only {} if no events.'
     }[aiLang] || '';
     // === END ===
 
@@ -537,7 +575,7 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
 
     // 根据当前语言获取系统提示（現在の言語に応じたシステムプロンプトを取得）
     const systemPrompt = getLocalizedText('aiSystemPrompt', { todayStr }) + eventsContext + aiDeleteTip + '\n';
-    console.log('【AI调试】最终systemPrompt:', systemPrompt);
+    console.log('🤖 发送给AI的完整prompt:', systemPrompt);
 
     const requestBody = {
       model: modelName,
@@ -583,8 +621,14 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
 
       if (!response.ok) {
         const errMsg = `API Error ${response.status}: ${data.error?.message || response.statusText}`;
-        if (response.status === 404) {
-          showChatError('モデルが利用できません。OpenRouterで利用可能なモデル（例: deepseek/deepseek-r1-0528:free, openai/gpt-3.5-turbo）をAPI設定で選択してください。');
+        console.log('❌ API请求失败:', response.status, data.error?.message || response.statusText);
+        
+        if (response.status === 400) {
+          showChatError('API请求格式错误。请尝试更换模型或检查API设置。建议使用: openai/gpt-3.5-turbo');
+        } else if (response.status === 404) {
+          showChatError('モデルが利用できません。OpenRouterで利用可能なモデル（例: openai/gpt-3.5-turbo）をAPI設定で選択してください。');
+        } else if (response.status === 429) {
+          showChatError('API请求过于频繁，请稍后再试。');
         } else {
           showChatError(`API Error ${response.status}: ${data.error?.message || response.statusText}`);
         }
@@ -593,6 +637,9 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
 
       const content = data.choices?.[0]?.message?.content;
       
+      console.log('🤖 === AI响应解析开始 ===');
+      console.log('📥 AI原始响应:', content);
+      
       // 显示友好的AI响应（親しみやすいAI応答を表示）
       showFriendlyAIResponse(content);
 
@@ -600,22 +647,115 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
         // JSON解析前，先清理AI回答中的多余文本（JSONを解析する前に、AIの回答から余分なテキストをクリーンアップ）
         let jsonStr = content.trim();
         
-        // 找到JSON部分（以{开头，}结尾）（JSON部分（{で始まり、}で終わる）を見つける）
-        const startIdx = jsonStr.indexOf('{');
-        const endIdx = jsonStr.lastIndexOf('}');
+        console.log('🧹 JSON清理前:', jsonStr);
         
-        if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-          jsonStr = jsonStr.substring(startIdx, endIdx + 1);
+        // 移除思考过程（<think>标签内容）
+        const beforeThink = jsonStr;
+        jsonStr = jsonStr.replace(/<think>[\s\S]*?<\/think>/g, '');
+        if (beforeThink !== jsonStr) {
+          console.log('🧹 已移除<think>标签内容');
         }
         
+        // 移除markdown代码块
+        const beforeMarkdown = jsonStr;
+        jsonStr = jsonStr.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+        if (beforeMarkdown !== jsonStr) {
+          console.log('🧹 已移除markdown代码块');
+        }
+        
+        // 移除可能的解释文本（在JSON之前或之后）
+        const lines = jsonStr.split('\n');
+        const jsonLines = [];
+        let inJson = false;
+        
+        for (const line of lines) {
+          const trimmedLine = line.trim();
+          if (trimmedLine.startsWith('{') || inJson) {
+            inJson = true;
+            jsonLines.push(line);
+            if (trimmedLine.endsWith('}')) {
+              break;
+            }
+          }
+        }
+        
+        if (jsonLines.length > 0) {
+          jsonStr = jsonLines.join('\n');
+          console.log('🧹 已提取JSON行:', jsonLines.length, '行');
+        } else {
+          // 如果上面的方法失败，使用原来的方法
+          const startIdx = jsonStr.indexOf('{');
+          const endIdx = jsonStr.lastIndexOf('}');
+          
+          if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+            jsonStr = jsonStr.substring(startIdx, endIdx + 1);
+            console.log('🧹 使用备用方法提取JSON');
+          }
+        }
+        
+        // 清理可能的尾随文本
+        jsonStr = jsonStr.trim();
+        if (jsonStr.includes('}')) {
+          const lastBraceIndex = jsonStr.lastIndexOf('}');
+          jsonStr = jsonStr.substring(0, lastBraceIndex + 1);
+        }
+        
+        console.log('🧹 JSON清理后:', jsonStr);
+        
         const eventObj = JSON.parse(jsonStr);
+        
+        // 检查是否为空JSON
+        if (Object.keys(eventObj).length === 0) {
+          console.log('⚠️  AI返回空JSON，可能是删除操作但AI未识别');
+          
+          // 智能删除逻辑：如果用户输入包含删除关键词且有目标日期事件，自动删除
+          const deleteKeywords = ['やっぱり', 'いかない', '行かない', 'キャンセル', '削除', 'やめ', '不去了', '取消', '删除'];
+          const hasDeleteIntent = deleteKeywords.some(keyword => userInputText.includes(keyword));
+          
+          if (hasDeleteIntent && targetDate) {
+            const dayEvents = getEvents().filter(ev => ev.startDate === targetDate);
+            if (dayEvents.length > 0) {
+              console.log('🤖 检测到删除意图，自动删除第一个事件');
+              const eventToDelete = dayEvents[0];
+              const userUId = localStorage.getItem("userUId");
+              
+              // 显示删除确认弹窗
+              showDeleteEventConfirm(eventToDelete, async (confirmedEvent) => {
+                try {
+                  await deleteEvent(userUId, eventToDelete._id);
+                  await refreshCalendar();
+                  createAnimatedMessage(`🗑 已删除事件: ${eventToDelete.eventName}`, 'assistant-message');
+                  console.log('✅ 智能删除成功');
+                } catch (error) {
+                  console.log('❌ 智能删除失败:', error);
+                  createAnimatedMessage('🤔 AI未能理解您的意图，请尝试更明确的表达', 'assistant-message');
+                }
+              });
+              return;
+            }
+          }
+          
+          console.log('💡 建议检查：');
+          console.log('   - 删除关键词是否被正确识别');
+          console.log('   - AI模型是否理解删除指令');
+          console.log('   - 事件ID是否正确传递');
+          
+          // 如果是空JSON，不执行任何操作
+          createAnimatedMessage('🤔 AI未能理解您的意图，请尝试更明确的表达', 'assistant-message');
+          return;
+        }
+        
         const action = eventObj.action || 'add_event';
         const userUId = localStorage.getItem("userUId");
+        
+        console.log('✅ JSON解析成功');
+        console.log('🎯 操作类型:', action);
+        console.log('📋 解析后的事件对象:', eventObj);
         if (action === 'add_event') {
           const cleanEvent = {
             eventName: eventObj.eventName || eventObj.note || '予定',
-            startDate: eventObj.startDate || new Date().toISOString().slice(0, 10),
-            endDate: eventObj.endDate || eventObj.startDate || new Date().toISOString().slice(0, 10),
+            startDate: targetDate || eventObj.startDate || new Date().toISOString().slice(0, 10),
+            endDate: targetDate || eventObj.endDate || eventObj.startDate || new Date().toISOString().slice(0, 10),
             startTime: eventObj.startTime || eventObj.time || '09:00',
             endTime: eventObj.endTime || eventObj.time || '09:00',
             location: eventObj.location || '未設定',
@@ -633,45 +773,83 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
             showChatError('事件ID缺失，无法修改。');
             return;
           }
+          
+          // 查找原始事件
+          const originalEvent = getEvents().find(ev => ev._id === eventObj._id);
+          if (!originalEvent) {
+            showChatError('找不到要修改的事件。');
+            return;
+          }
+          
           const cleanEvent = {
             _id: eventObj._id,
-            eventName: eventObj.eventName || eventObj.note || '予定',
-            startDate: eventObj.startDate || new Date().toISOString().slice(0, 10),
-            endDate: eventObj.endDate || eventObj.startDate || new Date().toISOString().slice(0, 10),
-            startTime: eventObj.startTime || eventObj.time || '09:00',
-            endTime: eventObj.endTime || eventObj.time || '09:00',
-            location: eventObj.location || '未設定',
-            note: eventObj.note || '予定',
-            color: eventObj.color || '#1a73e8'
+            eventName: eventObj.eventName || originalEvent.eventName || '予定',
+            startDate: eventObj.startDate || originalEvent.startDate || new Date().toISOString().slice(0, 10),
+            endDate: eventObj.endDate || eventObj.startDate || originalEvent.endDate || originalEvent.startDate || new Date().toISOString().slice(0, 10),
+            startTime: eventObj.startTime || eventObj.time || originalEvent.startTime || '09:00',
+            endTime: eventObj.endTime || eventObj.time || originalEvent.endTime || '09:00',
+            location: eventObj.location || originalEvent.location || '未設定',
+            note: eventObj.note || originalEvent.note || '予定',
+            color: eventObj.color || originalEvent.color || '#1a73e8'
           };
+          
           logAI('解析成功したイベント: ' + JSON.stringify(cleanEvent));
-          try {
-            await updateEvent(userUId, eventObj._id, cleanEvent);
-            await refreshCalendar();
-            createAnimatedMessage('✅ 事件已修改', 'assistant-message');
-          } catch (error) {
-            showChatError('事件修改失败: ' + error.message);
-          }
+          
+          // 显示修改确认弹窗
+          showUpdateEventConfirm(originalEvent, cleanEvent, async (confirmedEvent) => {
+            try {
+              await updateEvent(userUId, eventObj._id, confirmedEvent);
+              await refreshCalendar();
+              createAnimatedMessage('✅ 事件已修改', 'assistant-message');
+            } catch (error) {
+              showChatError('事件修改失败: ' + error.message);
+            }
+          });
         } else if (action === 'delete_event') {
           if (!eventObj._id) {
             showChatError('事件ID缺失，无法删除。');
             return;
           }
-          try {
-            await deleteEvent(userUId, eventObj._id);
-            await refreshCalendar();
-            createAnimatedMessage('🗑 事件已删除', 'assistant-message');
-          } catch (error) {
-            showChatError('事件删除失败: ' + error.message);
+          
+          // 查找要删除的事件
+          const eventToDelete = getEvents().find(ev => ev._id === eventObj._id);
+          if (!eventToDelete) {
+            showChatError('找不到要删除的事件。');
+            return;
           }
+          
+          // 显示删除确认弹窗
+          showDeleteEventConfirm(eventToDelete, async (confirmedEvent) => {
+            try {
+              await deleteEvent(userUId, eventObj._id);
+              await refreshCalendar();
+              createAnimatedMessage('🗑 事件已删除', 'assistant-message');
+            } catch (error) {
+              showChatError('事件删除失败: ' + error.message);
+            }
+          });
         }
         
         // 清理图片预览（如果有）（画像プレビューをクリア（もしあれば））
         if (currentImageFile) {
           setTimeout(() => hideImagePreview(), 2000);
         }
+        
+        console.log('✅ === AI处理完成 ===');
+        console.log('🎯 最终操作:', action);
+        console.log('📅 使用日期:', targetDate || 'AI默认日期');
+        console.log('⏰ 处理时间:', new Date().toLocaleTimeString());
 
       } catch (parseError) {
+        console.log('❌ === JSON解析失败 ===');
+        console.log('🔍 失败原因:', parseError.message);
+        console.log('📥 原始内容:', content);
+        console.log('🧹 清理后内容:', jsonStr);
+        console.log('💡 建议检查:');
+        console.log('   - AI是否输出了非JSON格式的内容');
+        console.log('   - 是否包含<think>标签或其他格式');
+        console.log('   - JSON语法是否正确');
+        
         logAI('JSON parse failed-> ' + content + ' Error: ' + parseError.message, 'error');
         showChatError('AIの返答を予定として解析できませんでした。もう一度お試しください。');
       }

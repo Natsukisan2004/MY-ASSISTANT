@@ -135,6 +135,102 @@ export function showEventConfirm(eventObj, onConfirm) {
   });
 }
 
+// 修改事件确认弹窗 - 显示变更前后对比
+export function showUpdateEventConfirm(originalEvent, updatedEvent, onConfirm) {
+  const modal = document.createElement('div');
+  modal.className = 'event-detail-popup';
+  modal.innerHTML = `
+    <div class="event-detail-modal update-confirm-modal">
+      <h3>📝 事件修改确认</h3>
+      <div class="comparison-container">
+        <div class="original-event">
+          <h4>🔴 修改前</h4>
+          <p><strong>事件名称:</strong> ${originalEvent.eventName || ''}</p>
+          <p><strong>开始日期:</strong> ${originalEvent.startDate || ''}</p>
+          <p><strong>结束日期:</strong> ${originalEvent.endDate || originalEvent.startDate || ''}</p>
+          <p><strong>时间:</strong> ${originalEvent.startTime || ''} ～ ${originalEvent.endTime || ''}</p>
+          <p><strong>地点:</strong> ${originalEvent.location || ''}</p>
+          <p><strong>备注:</strong> ${originalEvent.note || ''}</p>
+        </div>
+        <div class="arrow">➡️</div>
+        <div class="updated-event">
+          <h4>🟢 修改后</h4>
+          <p><strong>事件名称:</strong> ${updatedEvent.eventName || originalEvent.eventName || ''}</p>
+          <p><strong>开始日期:</strong> ${updatedEvent.startDate || originalEvent.startDate || ''}</p>
+          <p><strong>结束日期:</strong> ${updatedEvent.endDate || updatedEvent.startDate || originalEvent.endDate || originalEvent.startDate || ''}</p>
+          <p><strong>时间:</strong> ${updatedEvent.startTime || originalEvent.startTime || ''} ～ ${updatedEvent.endTime || originalEvent.endTime || ''}</p>
+          <p><strong>地点:</strong> ${updatedEvent.location || originalEvent.location || ''}</p>
+          <p><strong>备注:</strong> ${updatedEvent.note || originalEvent.note || ''}</p>
+        </div>
+      </div>
+      <div class="button-row">
+        <button id="confirmUpdateBtn" class="confirm-btn">✅ 确认修改</button>
+        <button id="cancelUpdateBtn" class="cancel-btn">❌ 取消</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  const confirmBtn = modal.querySelector('#confirmUpdateBtn');
+  const cancelBtn = modal.querySelector('#cancelUpdateBtn');
+  
+  confirmBtn.addEventListener('click', () => {
+    if (typeof onConfirm === 'function') onConfirm(updatedEvent);
+    document.body.removeChild(modal);
+  });
+  
+  cancelBtn.addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) document.body.removeChild(modal);
+  });
+}
+
+// 删除事件确认弹窗 - 显示要删除的事件详情
+export function showDeleteEventConfirm(eventToDelete, onConfirm) {
+  const modal = document.createElement('div');
+  modal.className = 'event-detail-popup';
+  modal.innerHTML = `
+    <div class="event-detail-modal delete-confirm-modal">
+      <h3>🗑️ 事件删除确认</h3>
+      <div class="delete-warning">
+        <p>⚠️ 您即将删除以下事件，此操作无法撤销：</p>
+      </div>
+      <div class="event-details">
+        <p><strong>事件名称:</strong> ${eventToDelete.eventName || ''}</p>
+        <p><strong>开始日期:</strong> ${eventToDelete.startDate || ''}</p>
+        <p><strong>结束日期:</strong> ${eventToDelete.endDate || eventToDelete.startDate || ''}</p>
+        <p><strong>时间:</strong> ${eventToDelete.startTime || ''} ～ ${eventToDelete.endTime || ''}</p>
+        <p><strong>地点:</strong> ${eventToDelete.location || ''}</p>
+        <p><strong>备注:</strong> ${eventToDelete.note || ''}</p>
+      </div>
+      <div class="button-row">
+        <button id="confirmDeleteBtn" class="delete-btn">🗑️ 确认删除</button>
+        <button id="cancelDeleteBtn" class="cancel-btn">❌ 取消</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  
+  const confirmBtn = modal.querySelector('#confirmDeleteBtn');
+  const cancelBtn = modal.querySelector('#cancelDeleteBtn');
+  
+  confirmBtn.addEventListener('click', () => {
+    if (typeof onConfirm === 'function') onConfirm(eventToDelete);
+    document.body.removeChild(modal);
+  });
+  
+  cancelBtn.addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) document.body.removeChild(modal);
+  });
+}
+
 // 新規イベント追加モーダルを開く
 export function openEventModal(date) {
   const eventModal = document.getElementById('eventModal');

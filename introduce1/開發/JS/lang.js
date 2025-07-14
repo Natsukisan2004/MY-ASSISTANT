@@ -26,7 +26,7 @@ export const texts = {
     volumeControl: '音量調節',
     // AI & OCR 関連
     ocrLanguage: 'jpn',
-    aiSystemPrompt: 'あなたは日本語のカレンダーアシスタントです。今日は{todayStr}です。ユーザーが話した内容からカレンダーイベントを抽出し、必ずJSON形式で返してください。例: {"eventName":"会議","startDate":"2025-01-15","endDate":"2025-01-15","startTime":"14:00","endTime":"15:00","location":"東京","note":"会議の詳細"}',
+    aiSystemPrompt: '日本語カレンダーアシスタント。今日は{todayStr}。イベント抽出してJSON返す。例: {"eventName":"会議","startDate":"2025-01-15","startTime":"14:00"}。変更時: {"action":"update_event","_id":"ID","startTime":"16:00"}。1行JSONのみ。',
     ocrSuccess: '✅ 認識成功！{count} 文字を抽出しました',
     ocrFailed: '❌ 認識失敗：{error}',
     ocrProcessing: '📷 画像を認識中...',
@@ -70,7 +70,7 @@ export const texts = {
     volumeControl: 'Volume Control',
     // AI & OCR Related
     ocrLanguage: 'eng',
-    aiSystemPrompt: 'You are an English calendar assistant. Today is {todayStr}. Extract calendar events from what the user says and return them in JSON format. Example: {"eventName":"Meeting","startDate":"2025-01-15","endDate":"2025-01-15","startTime":"14:00","endTime":"15:00","location":"New York","note":"Meeting details"}',
+    aiSystemPrompt: 'You are an English calendar assistant. Today is {todayStr}. Extract calendar events from what the user says and return them in JSON format. Example: {"eventName":"Meeting","startDate":"2025-01-15","endDate":"2025-01-15","startTime":"14:00","endTime":"15:00","location":"New York","note":"Meeting details"}. Return only one line of JSON, no explanations, code blocks, <think> tags or any thinking process.',
     ocrSuccess: '✅ Recognition successful! Extracted {count} characters',
     ocrFailed: '❌ Recognition failed: {error}',
     ocrProcessing: '📷 Recognizing image...',
@@ -138,7 +138,7 @@ export const texts = {
       volumeControl: '音量控制',
       // AI & OCR 相關
       ocrLanguage: 'chs',
-      aiSystemPrompt: '你是一个智能日程助手。今天是{todayStr}。请根据用户的需求，返回如下三种操作之一的JSON：\n1. 新增事件: {"action":"add_event","eventName":"会议","startDate":"2025-01-15","endDate":"2025-01-15","startTime":"14:00","endTime":"15:00","location":"会议室A","note":"讨论项目"}\n2. 修改事件: {"action":"update_event","_id":"事件ID","eventName":"会议","startDate":"2025-01-15","endDate":"2025-01-15","startTime":"15:00","endTime":"16:00","location":"会议室A","note":"内容"}\n3. 删除事件: {"action":"delete_event","_id":"事件ID"}\n请严格只返回一行JSON，不要有任何解释、注释、代码块、markdown、标签等内容，只能输出纯JSON。',
+      aiSystemPrompt: '你是一个智能日程助手。今天是{todayStr}。请根据用户的需求，返回如下三种操作之一的JSON：\n1. 新增事件: {"action":"add_event","eventName":"会议","startDate":"2025-01-15","endDate":"2025-01-15","startTime":"14:00","endTime":"15:00","location":"会议室A","note":"讨论项目"}\n2. 修改事件: {"action":"update_event","_id":"事件ID","eventName":"会议","startDate":"2025-01-15","endDate":"2025-01-15","startTime":"15:00","endTime":"16:00","location":"会议室A","note":"内容"}\n3. 删除事件: {"action":"delete_event","_id":"事件ID"}\n请严格只返回一行JSON，不要有任何解释、注释、代码块、markdown、标签、思考过程等内容，只能输出纯JSON。禁止使用<think>标签或任何其他格式。',
       ocrSuccess: '✅ 識別成功！提取了 {count} 個字符',
       ocrFailed: '❌ 識別失敗：{error}',
       ocrProcessing: '📷 正在識別圖片...',
