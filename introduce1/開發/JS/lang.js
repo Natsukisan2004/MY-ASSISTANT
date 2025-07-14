@@ -138,7 +138,7 @@ export const texts = {
       volumeControl: '音量控制',
       // AI & OCR 相關
       ocrLanguage: 'chs',
-      aiSystemPrompt: '你是一個中文行事曆助手。今天是{todayStr}。請從用戶的輸入中提取行事曆事件，並以JSON格式返回。例: {"eventName":"會議","startDate":"2025-01-15","endDate":"2025-01-15","startTime":"14:00","endTime":"15:00","location":"台北","note":"會議詳細"}',
+      aiSystemPrompt: '你是一个智能日程助手。今天是{todayStr}。请根据用户的需求，返回如下三种操作之一的JSON：\n1. 新增事件: {"action":"add_event","eventName":"会议","startDate":"2025-01-15","endDate":"2025-01-15","startTime":"14:00","endTime":"15:00","location":"会议室A","note":"讨论项目"}\n2. 修改事件: {"action":"update_event","_id":"事件ID","eventName":"会议","startDate":"2025-01-15","endDate":"2025-01-15","startTime":"15:00","endTime":"16:00","location":"会议室A","note":"内容"}\n3. 删除事件: {"action":"delete_event","_id":"事件ID"}\n请严格只返回一行JSON，不要有任何解释、注释、代码块、markdown、标签等内容，只能输出纯JSON。',
       ocrSuccess: '✅ 識別成功！提取了 {count} 個字符',
       ocrFailed: '❌ 識別失敗：{error}',
       ocrProcessing: '📷 正在識別圖片...',

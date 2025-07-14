@@ -379,7 +379,7 @@ body {
     background-color: var(--event-blue);
 }
 
-/* 顏色選擇器更新 */
+/* 顔色選擇器更新 */
 .color-picker {
     display: flex;
     gap: 10px;

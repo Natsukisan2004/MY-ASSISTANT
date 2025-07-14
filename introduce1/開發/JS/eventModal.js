@@ -105,32 +105,31 @@ export function showDeleteConfirm(event, onConfirm) {
 export function showEventConfirm(eventObj, onConfirm) {
   const modal = document.createElement('div');
   modal.className = 'event-detail-popup';
+  let title = 'このイベントを追加しますか？';
+  if (eventObj.action === 'update_event') title = 'このイベントを修正しますか？';
+  if (eventObj.action === 'delete_event') title = 'このイベントを削除しますか？';
   modal.innerHTML = `
     <div class="event-detail-modal">
-      <h3>このイベントを追加しますか？</h3>
-      <p><strong>開始日:</strong> ${eventObj.startDate}</p>
-      <p><strong>終了日:</strong> ${eventObj.endDate || eventObj.startDate}</p>
+      <h3>${title}</h3>
+      <p><strong>開始日:</strong> ${eventObj.startDate || ''}</p>
+      <p><strong>終了日:</strong> ${eventObj.endDate || eventObj.startDate || ''}</p>
       <p><strong>時間:</strong> ${eventObj.startTime || ''} ～ ${eventObj.endTime || ''}</p>
-      <p><strong>場所:</strong> ${eventObj.location}</p>
-      <p><strong>メモ:</strong> ${eventObj.note}</p>
-      <button id="confirmAddEventBtn">追加</button>
+      <p><strong>場所:</strong> ${eventObj.location || ''}</p>
+      <p><strong>メモ:</strong> ${eventObj.note || ''}</p>
+      <button id="confirmAddEventBtn">${eventObj.action === 'delete_event' ? '削除' : eventObj.action === 'update_event' ? '修正' : '追加'}</button>
       <button id="cancelAddEventBtn">キャンセル</button>
     </div>
   `;
   document.body.appendChild(modal);
-
   const confirmBtn = modal.querySelector('#confirmAddEventBtn');
   const cancelBtn = modal.querySelector('#cancelAddEventBtn');
-
   confirmBtn.addEventListener('click', () => {
     if (typeof onConfirm === 'function') onConfirm(eventObj);
     document.body.removeChild(modal);
   });
-
   cancelBtn.addEventListener('click', () => {
     document.body.removeChild(modal);
   });
-
   modal.addEventListener('click', (e) => {
     if (e.target === modal) document.body.removeChild(modal);
   });

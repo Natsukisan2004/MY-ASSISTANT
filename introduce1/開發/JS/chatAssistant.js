@@ -1,5 +1,8 @@
 import { showEventConfirm } from './eventModal.js';
 import { texts } from './lang.js';
+import { updateEvent, deleteEvent, loadEvents } from './eventStorage.js';
+import { setEvents, getEvents } from './calendar.js';
+import { refreshCalendar } from './main.js';
 
 export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId }) {
   const micBtn = document.getElementById(micBtnId);
@@ -441,26 +444,100 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
        createAnimatedMessage("👤 " + text, 'user-message');
      }
 
+    // === 重要：AI处理前先刷新本地事件数据 ===
+    try {
+      const userUId = localStorage.getItem("userUId");
+      console.log('【AI调试】当前userUId:', userUId); // 新增log
+      if (userUId) {
+        console.log('🔄 刷新本地事件数据...');
+        const freshEvents = await loadEvents(userUId);
+        console.log('【AI调试】loadEvents返回:', freshEvents); // 新增log
+        setEvents(freshEvents);
+        console.log('✅ 本地事件数据已刷新，共', freshEvents.length, '个事件');
+      }
+    } catch (error) {
+      console.warn('⚠️ 刷新事件数据失败:', error);
+    }
+    // === END ===
+
     const apiUrl = localStorage.getItem('openai_api_url') || 'https://openrouter.ai/api/v1/chat/completions';
     const apiKey = localStorage.getItem('openai_api_key') || '';
     const modelName = localStorage.getItem('openai_model') || 'deepseek/deepseek-r1-0528:free';
 
     const todayStr = new Date().toISOString().slice(0, 10);
 
-    // === 新增：根据系统语言添加AI回复语言指令 ===
-    const currentLang = localStorage.getItem('calendarLang') || 'ja';
-    const langPrompt = {
-      ja: 'ユーザーへの返答は必ず日本語でお願いします。',
-      en: 'Please always reply to the user in English.',
-      zh: '请始终用中文回复用户。'
-    }[currentLang] || '';
+    // === 优化事件列表，详细列出ID、名称、备注、时间、地点 ===
+    function extractDateFromText(text) {
+      // 优先匹配完整日期
+      const m1 = text.match(/(\d{4}-\d{2}-\d{2})/);
+      if (m1) return m1[1];
+      // 匹配“15号”或“15日”
+      const m2 = text.match(/(\d{1,2})[号日]/);
+      if (m2) {
+        const now = new Date();
+        let year = now.getFullYear();
+        let month = now.getMonth() + 1;
+        let day = parseInt(m2[1], 10);
+        if (day > now.getDate()) {
+          // 本月
+        } else {
+          // 下个月
+          month += 1;
+          if (month > 12) {
+            month = 1;
+            year += 1;
+          }
+        }
+        return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+      }
+      // 支持“明天”“后天”
+      if (/明天/.test(text)) {
+        const d = new Date();
+        d.setDate(d.getDate() + 1);
+        return d.toISOString().slice(0, 10);
+      }
+      if (/后天/.test(text)) {
+        const d = new Date();
+        d.setDate(d.getDate() + 2);
+        return d.toISOString().slice(0, 10);
+      }
+      return null;
+    }
+    const userInputText = userInput.value.trim();
+    const targetDate = extractDateFromText(userInputText);
+    let eventsContext = '';
+    // 调试输出：用户输入、目标日期、当天事件、拼接的prompt
+    console.log('【AI调试】用户输入:', userInputText);
+    console.log('【AI调试】目标日期:', targetDate);
+    if (targetDate) {
+      const dayEvents = getEvents().filter(ev => ev.startDate === targetDate);
+      console.log('【AI调试】全部事件:', getEvents()); // 新增调试日志
+      console.log('【AI调试】当天事件:', dayEvents);
+      eventsContext = dayEvents.length > 0
+        ? '\n该日事件列表：\n' + dayEvents.map(ev => `ID: ${ev._id}, 名称: ${ev.eventName}, 备注: ${ev.note}, 时间: ${ev.startTime || ''}, 地点: ${ev.location || ''}`).join('\n')
+        : '\n该日没有事件。';
+      console.log('【AI调试】事件列表文本:', eventsContext);
+    } else {
+      eventsContext = '\n未能识别日期，无法提供事件列表。';
+      console.log('【AI调试】事件列表文本:', eventsContext);
+    }
+    // === END ===
+
+    // === 优化prompt，指令更明确 ===
+    const aiLang = localStorage.getItem('calendarLang') || 'zh';
+    const aiDeleteTip = {
+      zh: '\n请根据用户输入，查找事件名或备注与用户输入内容高度相关的事件，如果有则返回{"action":"delete_event","_id":"事件ID"}，如果没有请返回空JSON {}。请严格只返回一行JSON，不要有任何解释、注释、代码块、markdown、标签等内容，只能输出纯JSON。',
+      ja: '\nユーザー入力と一致するイベント名またはメモがある場合のみ{"action":"delete_event","_id":"イベントID"}を返し、なければ空のJSON {} を返してください。必ず1行のJSONのみを返し、説明やコードブロックは禁止。',
+      en: '\nOnly if the event name or note highly matches the user input, return {"action":"delete_event","_id":"eventID"}, otherwise return empty JSON {}. Strictly return only one line of JSON, no explanation, comments, code block, markdown or tags.'
+    }[aiLang] || '';
     // === END ===
 
     // 显示思考中的状态(思考中のステータスを表示)
     const thinkingMsg = createAnimatedMessage(getLocalizedText('thinkingMessage'), 'assistant-message thinking-message', true);
 
     // 根据当前语言获取系统提示（現在の言語に応じたシステムプロンプトを取得）
-    const systemPrompt = getLocalizedText('aiSystemPrompt', { todayStr }) + '\n' + langPrompt;
+    const systemPrompt = getLocalizedText('aiSystemPrompt', { todayStr }) + eventsContext + aiDeleteTip + '\n';
+    console.log('【AI调试】最终systemPrompt:', systemPrompt);
 
     const requestBody = {
       model: modelName,
@@ -532,27 +609,63 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
         }
         
         const eventObj = JSON.parse(jsonStr);
-        
-        // null値の処理と必須フィールドのチェック
-        const cleanEvent = {
-          eventName: eventObj.eventName || eventObj.note || '予定', // 事件名字
-          startDate: eventObj.startDate || new Date().toISOString().slice(0, 10),
-          endDate: eventObj.endDate || eventObj.startDate || new Date().toISOString().slice(0, 10),
-          startTime: eventObj.startTime || eventObj.time || '09:00', // 开始时间
-          endTime: eventObj.endTime || eventObj.time || '09:00', // 结束时间
-          location: eventObj.location || '未設定',
-          note: eventObj.note || '予定',
-          color: eventObj.color || '#1a73e8'
-        };
-        
-        logAI('解析成功したイベント: ' + JSON.stringify(cleanEvent));
-        
-        showEventConfirm(cleanEvent, (confirmedEvent) => {
-          if (typeof window.onChatConfirmed === 'function') {
-            window.onChatConfirmed(confirmedEvent);
+        const action = eventObj.action || 'add_event';
+        const userUId = localStorage.getItem("userUId");
+        if (action === 'add_event') {
+          const cleanEvent = {
+            eventName: eventObj.eventName || eventObj.note || '予定',
+            startDate: eventObj.startDate || new Date().toISOString().slice(0, 10),
+            endDate: eventObj.endDate || eventObj.startDate || new Date().toISOString().slice(0, 10),
+            startTime: eventObj.startTime || eventObj.time || '09:00',
+            endTime: eventObj.endTime || eventObj.time || '09:00',
+            location: eventObj.location || '未設定',
+            note: eventObj.note || '予定',
+            color: eventObj.color || '#1a73e8'
+          };
+          logAI('解析成功したイベント: ' + JSON.stringify(cleanEvent));
+          showEventConfirm(cleanEvent, (confirmedEvent) => {
+            if (typeof window.onChatConfirmed === 'function') {
+              window.onChatConfirmed(confirmedEvent);
+            }
+          });
+        } else if (action === 'update_event') {
+          if (!eventObj._id) {
+            showChatError('事件ID缺失，无法修改。');
+            return;
           }
-        });
-
+          const cleanEvent = {
+            _id: eventObj._id,
+            eventName: eventObj.eventName || eventObj.note || '予定',
+            startDate: eventObj.startDate || new Date().toISOString().slice(0, 10),
+            endDate: eventObj.endDate || eventObj.startDate || new Date().toISOString().slice(0, 10),
+            startTime: eventObj.startTime || eventObj.time || '09:00',
+            endTime: eventObj.endTime || eventObj.time || '09:00',
+            location: eventObj.location || '未設定',
+            note: eventObj.note || '予定',
+            color: eventObj.color || '#1a73e8'
+          };
+          logAI('解析成功したイベント: ' + JSON.stringify(cleanEvent));
+          try {
+            await updateEvent(userUId, eventObj._id, cleanEvent);
+            await refreshCalendar();
+            createAnimatedMessage('✅ 事件已修改', 'assistant-message');
+          } catch (error) {
+            showChatError('事件修改失败: ' + error.message);
+          }
+        } else if (action === 'delete_event') {
+          if (!eventObj._id) {
+            showChatError('事件ID缺失，无法删除。');
+            return;
+          }
+          try {
+            await deleteEvent(userUId, eventObj._id);
+            await refreshCalendar();
+            createAnimatedMessage('🗑 事件已删除', 'assistant-message');
+          } catch (error) {
+            showChatError('事件删除失败: ' + error.message);
+          }
+        }
+        
         // 清理图片预览（如果有）（画像プレビューをクリア（もしあれば））
         if (currentImageFile) {
           setTimeout(() => hideImagePreview(), 2000);
