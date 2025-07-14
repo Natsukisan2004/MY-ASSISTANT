@@ -111,6 +111,7 @@ export function showEventConfirm(eventObj, onConfirm) {
   modal.innerHTML = `
     <div class="event-detail-modal">
       <h3>${title}</h3>
+      <p><strong>イベント名:</strong> ${eventObj.eventName || ''}</p>
       <p><strong>開始日:</strong> ${eventObj.startDate || ''}</p>
       <p><strong>終了日:</strong> ${eventObj.endDate || eventObj.startDate || ''}</p>
       <p><strong>時間:</strong> ${eventObj.startTime || ''} ～ ${eventObj.endTime || ''}</p>
