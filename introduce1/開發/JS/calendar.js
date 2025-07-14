@@ -19,11 +19,13 @@ export function setCurrentDate(date) {
 
 /** 外部からイベント配列をセット */
 export function setEvents(loadedEvents) {
+  console.log('【setEvents】设置事件:', loadedEvents);
   events = loadedEvents;
 }
 
 /** イベント配列を返す */
 export function getEvents() {
+  console.log('【getEvents】返回事件:', events);
   return events;
 }
 
