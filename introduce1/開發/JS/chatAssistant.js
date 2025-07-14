@@ -447,11 +447,20 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
 
     const todayStr = new Date().toISOString().slice(0, 10);
 
+    // === 新增：根据系统语言添加AI回复语言指令 ===
+    const currentLang = localStorage.getItem('calendarLang') || 'ja';
+    const langPrompt = {
+      ja: 'ユーザーへの返答は必ず日本語でお願いします。',
+      en: 'Please always reply to the user in English.',
+      zh: '请始终用中文回复用户。'
+    }[currentLang] || '';
+    // === END ===
+
     // 显示思考中的状态(思考中のステータスを表示)
     const thinkingMsg = createAnimatedMessage(getLocalizedText('thinkingMessage'), 'assistant-message thinking-message', true);
 
     // 根据当前语言获取系统提示（現在の言語に応じたシステムプロンプトを取得）
-    const systemPrompt = getLocalizedText('aiSystemPrompt', { todayStr });
+    const systemPrompt = getLocalizedText('aiSystemPrompt', { todayStr }) + '\n' + langPrompt;
 
     const requestBody = {
       model: modelName,
@@ -612,23 +621,21 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
   }
 
   // 为聊天窗口添加粘贴监听器（チャットウィンドウに貼り付けリスナーを追加）
-  if (chatWindow) {
-    chatWindow.addEventListener('paste', handleClipboardPaste);
-  }
+  // === 移除 chatWindow 上的 paste 监听器 ===
+  // if (chatWindow) {
+  //   chatWindow.removeEventListener('paste', handleClipboardPaste); // 防止重复绑定
+  //   chatWindow.addEventListener('paste', handleClipboardPaste);
+  // }
 
-  // 为整个文档添加粘贴监听器（当聊天窗口打开时）（ドキュメント全体に貼り付けリスナーを追加（チャットウィンドウが開いている場合））
-  let pasteListenerAdded = false;
-  
-  function addGlobalPasteListener() {
-    if (!pasteListenerAdded) {
-      document.addEventListener('paste', (e) => {
-        // 只在聊天窗口打开时处理粘贴（チャットウィンドウが開いているときのみ貼り付けを処理）
-        if (chatWindow && !chatWindow.classList.contains('hidden')) {
-          handleClipboardPaste(e);
-        }
-      });
-      pasteListenerAdded = true;
-    }
+  // === 只在 document 上绑定一次 paste 监听器 ===
+  if (!window.__globalPasteListenerAdded) {
+    document.addEventListener('paste', (e) => {
+      const chatWindow = document.getElementById('chatWindow');
+      if (chatWindow && !chatWindow.classList.contains('hidden')) {
+        handleClipboardPaste(e);
+      }
+    });
+    window.__globalPasteListenerAdded = true;
   }
 
   // 事件监听器设置(イベントリスナー設定)
@@ -722,7 +729,7 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
               imageDropZone.classList.remove('hidden');
             }
             // 2. 激活全局粘贴监听器（2. グローバル貼り付けリスナーを有効化）
-            addGlobalPasteListener();
+            // addGlobalPasteListener(); // この行は削除されました
             
             // 3. 首次使用引导（只显示一次）（3. 初回利用ガイダンス（一度だけ表示））
             if (!localStorage.getItem('chat_features_intro_shown')) {
