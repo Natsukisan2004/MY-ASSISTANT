@@ -26,7 +26,7 @@ export const texts = {
     volumeControl: '音量調節',
     // AI & OCR 関連
     ocrLanguage: 'jpn',
-    aiSystemPrompt: 'あなたは日本語のカレンダーアシスタントです。今日は{todayStr}です。ユーザーが話した内容からカレンダーイベントを抽出し、必ずJSON形式で返してください。例: {"startDate":"2025-01-15","endDate":"2025-01-15","time":"14:00","location":"東京","note":"会議"}',
+    aiSystemPrompt: 'あなたは日本語のカレンダーアシスタントです。今日は{todayStr}です。ユーザーが話した内容からカレンダーイベントを抽出し、必ずJSON形式で返してください。例: {"eventName":"会議","startDate":"2025-01-15","endDate":"2025-01-15","startTime":"14:00","endTime":"15:00","location":"東京","note":"会議の詳細"}',
     ocrSuccess: '✅ 認識成功！{count} 文字を抽出しました',
     ocrFailed: '❌ 認識失敗：{error}',
     ocrProcessing: '📷 画像を認識中...',
@@ -70,7 +70,7 @@ export const texts = {
     volumeControl: 'Volume Control',
     // AI & OCR Related
     ocrLanguage: 'eng',
-    aiSystemPrompt: 'You are an English calendar assistant. Today is {todayStr}. Extract calendar events from what the user says and return them in JSON format. Example: {"startDate":"2025-01-15","endDate":"2025-01-15","time":"14:00","location":"New York","note":"Meeting"}',
+    aiSystemPrompt: 'You are an English calendar assistant. Today is {todayStr}. Extract calendar events from what the user says and return them in JSON format. Example: {"eventName":"Meeting","startDate":"2025-01-15","endDate":"2025-01-15","startTime":"14:00","endTime":"15:00","location":"New York","note":"Meeting details"}',
     ocrSuccess: '✅ Recognition successful! Extracted {count} characters',
     ocrFailed: '❌ Recognition failed: {error}',
     ocrProcessing: '📷 Recognizing image...',
@@ -138,7 +138,7 @@ export const texts = {
       volumeControl: '音量控制',
       // AI & OCR 相關
       ocrLanguage: 'chs',
-      aiSystemPrompt: '你是一個中文行事曆助手。今天是{todayStr}。請從用戶的輸入中提取行事曆事件，並以JSON格式返回。例: {"startDate":"2025-01-15","endDate":"2025-01-15","time":"14:00","location":"台北","note":"會議"}',
+      aiSystemPrompt: '你是一個中文行事曆助手。今天是{todayStr}。請從用戶的輸入中提取行事曆事件，並以JSON格式返回。例: {"eventName":"會議","startDate":"2025-01-15","endDate":"2025-01-15","startTime":"14:00","endTime":"15:00","location":"台北","note":"會議詳細"}',
       ocrSuccess: '✅ 識別成功！提取了 {count} 個字符',
       ocrFailed: '❌ 識別失敗：{error}',
       ocrProcessing: '📷 正在識別圖片...',

@@ -526,9 +526,11 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
         
         // null値の処理と必須フィールドのチェック
         const cleanEvent = {
+          eventName: eventObj.eventName || eventObj.note || '予定', // 事件名字
           startDate: eventObj.startDate || new Date().toISOString().slice(0, 10),
           endDate: eventObj.endDate || eventObj.startDate || new Date().toISOString().slice(0, 10),
-          time: eventObj.time || '09:00',
+          startTime: eventObj.startTime || eventObj.time || '09:00', // 开始时间
+          endTime: eventObj.endTime || eventObj.time || '09:00', // 结束时间
           location: eventObj.location || '未設定',
           note: eventObj.note || '予定',
           color: eventObj.color || '#1a73e8'
