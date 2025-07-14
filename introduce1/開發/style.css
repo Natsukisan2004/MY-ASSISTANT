@@ -93,14 +93,6 @@ body {
 .hidden {
   display: none !important;
 }
-
-/* 月表示のグリッド */
-.calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
-}
-
 /* --- 週表示・日表示のスクロールと固定表示のためのスタイル --- */
 
 /* スクロールさせるコンテナ */
@@ -186,18 +178,6 @@ body {
   box-sizing: border-box;
 }
 
-.event-item {
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    color: white;
-    background-color: var(--event-blue);
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
 /* 日・週表示の際に高さを固定し、スクロールを有効にするためのクラス */
 .fixed-height-view {
     display: flex;
@@ -205,14 +185,6 @@ body {
     height: 80vh;
 }
 
-/* 月表示の日付の高さを柔軟にする */
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    grid-auto-rows: 1fr; /* 各行の高さを均等に分配 */
-    gap: 5px;
-    flex-grow: 1; /* コンテナの高さいっぱいに広がる */
-}
 
 /* --- 検索フォームのスタイル --- */
 .search-form-container {
@@ -312,18 +284,14 @@ body {
     padding-bottom: 1rem;
 }
 
-.calendar {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
-}
-
 .calendar-day {
     background: var(--primary-bg);
     border-radius: 8px;
     transition: all 0.2s ease;
     position: relative;
     min-height: 120px;
+    min-width: 0; /* グリッド内で幅のはみ出し防止 */
+     border: 2.5px solid var(--secondary-bg);
 }
 
 .calendar-day:hover {
@@ -335,49 +303,6 @@ body {
     font-weight: bold;
 }
 
-/* モーダルスタイル */
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
-
-.modal-content {
-    position: relative;
-    background: white;
-    padding: 24px;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-.modal.show {
-    display: flex !important;
-}
-
-
-/* 事件樣式更新 */
-.event-item {
-    margin: 2px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    color: white;
-    cursor: pointer;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    background-color: var(--event-blue);
-}
 
 /* 顏色選擇器更新 */
 .color-picker {
@@ -707,7 +632,7 @@ body {
     }
 }
 
-/* 聊天输入区域更新 */
+/* 聊天入力エリアの更新 */
 #chatForm .input-group {
     display: flex;
     gap: 8px;
@@ -719,7 +644,7 @@ body {
     min-height: 70px;
 }
 
-/* 图片上传按钮 */
+/* 画像アップロードボタン */
 #imageBtn {
     background: linear-gradient(135deg, #ff9500 0%, #ff6b35 100%);
     color: white;
@@ -748,7 +673,7 @@ body {
     transform: scale(0.95);
 }
 
-/* 图片拖拽区域 */
+/* 画像ドラッグエリア */
 .image-drop-zone {
     margin: 16px 20px;
     border: 2px dashed rgba(102, 126, 234, 0.3);
@@ -839,7 +764,7 @@ body {
 
 
 
-/* 图片预览区域 */
+/* 画像プレビューエリア */
 .image-preview {
     margin: 16px 20px;
     border: 1px solid rgba(0, 0, 0, 0.1);
@@ -1084,42 +1009,6 @@ body {
 .calendar-day.saturday {
     background-color: #d0e3ff;
 }
-/* モーダル非表示時 */
-.modal {
-    display: none;
-    position: fixed;
-    z-index: 999;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    justify-content: center;
-    align-items: center;
-  }
-  
-  /* .show がついたら表示 */
-  .modal.show {
-    display: flex;
-  }
-  
-  /* モーダルの中身のスタイル */
-  .modal-content {
-    background: #fff;
-    padding: 20px;
-    border-radius: 12px;
-    width: 90%;
-    max-width: 400px;
-    position: relative;
-  }
-  
-  /* × ボタンのスタイル */
-  .modal .close {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 24px;
-    cursor: pointer;
-  }
 
 /* API设置模态框样式 */
 .api-section {
@@ -1358,5 +1247,142 @@ body {
     accent-color: #4caf50; /* スライダーの色（対応ブラウザのみ） */
   }
   
+  /* ドラッグオーバーされた日の列の背景色を変更 */
+.week-day-body.drag-over,
+.day-events-body.drag-over {
+    background-color: #e8f0fe; /* 明るい青色 */
+    transition: background-color 0.2s ease;
+}
 
+/* ドラッグ中のイベントが乗った日付セルのスタイル */
+.calendar-day.drag-enter {
+    outline: 3px solid #1a73e8; /* 青い枠線 */
+    outline-offset: -3px;       /* 枠線をセルの内側に表示 */
+    background-color: #e8f0fe;  /* 背景を薄い青色に */
+    transition: background-color 0.2s, outline 0.2s; /* 枠線と背景色が滑らかに変化するアニメーション */
+}
+/* --- 汎用モーダルウィンドウのスタイル（統合） --- */
+.modal {
+    display: none; /* 初期状態では非表示 */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* z-indexを1000に統一 */
+}
   
+/* .showクラスが付与されたら表示 */
+.modal.show {
+    display: flex;
+}
+  
+/* モーダルの中身の基本スタイル */
+.modal-content {
+    position: relative;
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* モーダルの閉じるボタン */
+.modal .close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* --- 月表示カレンダーのグリッドスタイル（統合） --- */
+#calendar, .calendar, .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+}
+
+/* 月表示の各行の高さを均等にするための追加スタイル */
+.calendar-grid {
+    grid-auto-rows: 1fr;
+    flex-grow: 1;
+}
+
+.events-container {
+    min-width: 0; /* 子要素の幅制御を有効化 */
+    width: 100%;
+    height: auto;
+    z-index: 1;
+    position: relative;
+    padding: 0;
+}
+
+/* === 新しいイベントスタイル === */
+
+/* --- 1. 単日イベントのスタイル --- */
+/* 日付の枠内に収まる、独立したブロック */
+.single-day-event {
+    display: block;
+    padding: 2px 6px;
+    font-size: 12px;
+    color: white;
+    border-radius: 4px;
+    margin: 2px 0; /* 同じ日のイベントが重ならないようにマージンを設定 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
+
+/* --- 2. 複数日イベント（帯）のスタイル --- */
+
+/* 帯の各パーツに共通する基本スタイル */
+.multi-day-event-segment {
+    position: absolute;
+    left: -2.5px;  /* 枠線の分だけ左に広げる */
+    right: -2.5px; /* 枠線の分だけ右に広げる */
+    top: 0;
+    height: 25px;  /* お好みで調整 */
+    z-index: 10;   /* 枠線より前面に */
+    display: flex;
+    align-items: center;
+    width: auto;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: white;
+    background-color: var(--event-blue);
+    border-radius: 0;
+    margin: 0;
+    pointer-events: auto;
+}
+
+/* 帯の開始部分 */
+.multi-day-event-segment.event-starts {
+  border-radius: 4px 0 0 4px;
+  margin-right: -1px; /* 右の罫線に重なる */
+  padding-left: 6px;
+}
+
+/* 帯の継続部分（中間） */
+.multi-day-event-segment.event-continues {
+  border-radius: 0;
+  margin-left: -1px;  /* 左の罫線に重なる */
+  margin-right: -1px; /* 右の罫線に重なる */
+}
+
+/* 帯の終了部分 */
+.multi-day-event-segment.event-ends {
+  border-radius: 0 4px 4px 0;
+  margin-left: -1px; /* 左の罫線に重なる */
+}
