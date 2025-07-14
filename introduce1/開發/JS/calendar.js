@@ -39,6 +39,7 @@ export function formatDate(date) {
 
 /** カレンダーのHTMLを生成して画面に反映 */
 export function createCalendar() {
+  document.querySelector('.weekdays').style.display = 'grid';
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
@@ -287,6 +288,7 @@ async function handleTimelineDrop(e, dayBodyEl) {
 
 /** 週表示ビューを生成する */
 export function createWeekView() {
+  document.querySelector('.weekdays').style.display = 'grid';
   const view = document.getElementById('week-view');
   view.innerHTML = '';
   const current = getCurrentDate();
@@ -392,6 +394,8 @@ export function createWeekView() {
 
 /** 日表示ビューを生成する */
 export function createDayView() {
+  document.querySelector('.weekdays').style.display = 'none';
+
   const view = document.getElementById('day-view');
   view.innerHTML = '';
   const currentDateStr = formatDate(getCurrentDate());
