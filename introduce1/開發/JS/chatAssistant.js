@@ -460,7 +460,7 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
     // === 第一次AI调用：意图+参数抽取 ===
     logAI(`[AI1参数抽取] 使用模型: ${modelName}, API: ${apiUrl}`);
     const ai1Prompt = `你是一个日历助手。今天日期是：${todayStr}。
-请只从用户输入中抽取日期（如“2025-07-18”“明天”“18号”等），并转成YYYY-MM-DD格式的date字段，不要推理用户意图，不要补全，不要输出eventName、action、fields等。
+请只从用户输入中抽取日期（如“2025-07-18”“明天”"明後日"“18号”等），并转成YYYY-MM-DD格式的date字段，
 输出格式如下：
 {"date": "YYYY-MM-DD"}
 只返回一行JSON，不要输出其它内容。
