@@ -434,6 +434,53 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
     }
   }
 
+    function extractDateFromText(text) {
+    // YYYY-MM-DD形式の完全な日付を最優先で照合
+    const m1 = text.match(/(\d{4}-\d{2}-\d{2})/);
+    if (m1) return m1[1];
+    
+    // 「15号」や「15日」といった形式を照合
+    const m2 = text.match(/(\d{1,2})[号日]/);
+    if (m2) {
+      const now = new Date();
+      let year = now.getFullYear();
+      let month = now.getMonth() + 1;
+      let day = parseInt(m2[1], 10);
+      
+      // もし指定された日が今日より前なら、来月のことだと解釈
+      if (day < now.getDate()) {
+        month += 1;
+        if (month > 12) {
+          month = 1;
+          year += 1;
+        }
+      }
+      return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+    
+    // 「明日」「あした」などを照合
+    if (/明日|あした|tomorrow/.test(text)) {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      return d.toISOString().slice(0, 10);
+    }
+    
+    // 「明後日」「あさって」などを照合
+    if (/明後日|あさって|the day after tomorrow/.test(text)) {
+      const d = new Date();
+      d.setDate(d.getDate() + 2);
+      return d.toISOString().slice(0, 10);
+    }
+
+    // 「今日」「きょう」などを照合
+    if (/今日|きょう|today/.test(text)) {
+      return new Date().toISOString().slice(0, 10);
+    }
+    
+    return null; // 日付が見つからなければnullを返す
+  }
+
+
   async function sendChatMessage(messageText) {
     const text = messageText || userInput.value.trim();
     if (!text) return;
@@ -442,211 +489,129 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
       createAnimatedMessage("👤 " + text, 'user-message');
     }
 
-    try {
-      const userUId = localStorage.getItem("userUId");
-      if (userUId) {
-        const freshEvents = await loadEvents(userUId);
-        setEvents(freshEvents);
-      }
-    } catch (error) {
-      console.warn('⚠️ 刷新事件数据失败:', error);
-    }
+    const thinkingMsg = createAnimatedMessage(getLocalizedText('thinkingMessage'), 'assistant-message thinking-message', true);
 
-    const apiUrl = localStorage.getItem('openai_api_url') || 'https://openrouter.ai/api/v1/chat/completions';
-    const apiKey = localStorage.getItem('openai_api_key') || '';
     const modelName = localStorage.getItem('openai_model') || 'deepseek/deepseek-r1-0528:free';
     const todayStr = new Date().toISOString().slice(0, 10);
-    const userInputText = userInput.value.trim();
-    // === 第一次AI调用：意图+参数抽取 ===
-    logAI(`[AI1参数抽取] 使用模型: ${modelName}, API: ${apiUrl}`);
-    const ai1Prompt = `你是一个日历助手。今天日期是：${todayStr}。
-请只从用户输入中抽取日期（如“2025-07-18”“明天”"明後日"“18号”等），并转成YYYY-MM-DD格式的date字段，
-输出格式如下：
-{"date": "YYYY-MM-DD"}
-只返回一行JSON，不要输出其它内容。
-输入："${userInputText}"`;
+    const eventsContext = '...'; 
+    const systemPrompt = getLocalizedText('aiSystemPrompt', { todayStr }) + eventsContext + '...';
 
-    const ai1RequestBody = {
-      model: modelName,
-      messages: [
-        { role: 'system', content: ai1Prompt },
-        { role: 'user', content: userInputText }
-      ]
+    const requestToFunction = {
+      messages: [ { role: 'system', content: systemPrompt }, { role: 'user', content: text } ],
+      modelName: modelName
     };
-    const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + apiKey
-    };
-    if (apiUrl.includes('openrouter.ai')) {
-      headers['HTTP-Referer'] = window.location.origin;
-      headers['X-Title'] = 'Calendar Assistant';
-    }
-    const thinkingMsg = createAnimatedMessage(getLocalizedText('thinkingMessage'), 'assistant-message thinking-message', true);
-    let ai1Result;
+
     try {
-      const response = await fetch(apiUrl, {
+      // デプロイしたCloud FunctionのURLを直接指定します
+      const functionUrl = 'https://asia-northeast1-myassistant-90ce9.cloudfunctions.net/chatWithAI';
+
+      // 通常のfetchで、作成したCloud Functionを呼び出します
+      const response = await fetch(functionUrl, {
         method: 'POST',
-        headers: headers,
-        body: JSON.stringify(ai1RequestBody)
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        // onRequest関数に合わせて { data: ... } という形式でデータを送信します
+        body: JSON.stringify({ data: requestToFunction }),
       });
-      if (thinkingMsg.parentNode) thinkingMsg.parentNode.removeChild(thinkingMsg);
-      const data = await response.json();
+
+      if (thinkingMsg.parentNode) {
+        thinkingMsg.parentNode.removeChild(thinkingMsg);
+      }
+      
+      const result = await response.json();
+
+      if (!response.ok) {
+        // サーバーからのエラーメッセージを正しく表示します
+        throw new Error(result.error || '不明なサーバーエラーが発生しました。');
+      }
+      
+      // Cloud Functionからのレスポンスは .data プロパティに入っています
+      const data = result.data; 
+      logAI({ status: 200, data });
+
       const content = data.choices?.[0]?.message?.content;
-      // 增强调试日志
-      console.log('[AI1原始响应]', content);
+
+      
+      // 显示友好的AI响应（親しみやすいAI応答を表示）
+      showFriendlyAIResponse(content);
+
+      ////
+    try {
       let jsonStr = content.trim();
+      
+      const beforeThink = jsonStr;
+      jsonStr = jsonStr.replace(/<think>[\s\S]*?<\/think>/g, '');
+      
+      const beforeMarkdown = jsonStr;
       jsonStr = jsonStr.replace(/```json\s*/g, '').replace(/```\s*/g, '');
+
       const startIdx = jsonStr.indexOf('{');
       const endIdx = jsonStr.lastIndexOf('}');
+      
       if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
         jsonStr = jsonStr.substring(startIdx, endIdx + 1);
       }
-      ai1Result = JSON.parse(jsonStr);
-      console.log('[AI1解析后]', ai1Result);
-    } catch (err) {
-      if (thinkingMsg.parentNode) thinkingMsg.parentNode.removeChild(thinkingMsg);
-      showChatError('第一次AI解析失败，请重试。');
-      return;
-    }
-    if (!ai1Result || !ai1Result.date) {
-      showChatError('AI未能正确识别您的意图，请补充关键信息。');
-      return;
-    }
 
-    // 本地查找当天所有事件
-    const candidates = getEvents().filter(ev => ev.startDate === ai1Result.date);
-
-    // === 第二次AI调用：结合候选事件做决策 ===
-    logAI(`[AI2事件决策] 使用模型: ${modelName}, API: ${apiUrl}`);
-    // 多语言支持
-    const langMap = { zh: '中文', ja: '日语', en: '英语' };
-    const userLang = getCurrentLanguage();
-    const langText = langMap[userLang] || '中文';
-    const ai2Prompt = `你是一个日历事件决策助手。
-今天是 ${todayStr}。
-以下是已提取的目标日期：
-  日期：${ai1Result.date}
-
-后端已根据这个日期查询到以下候选事件（JSON 数组；若无匹配，则数组为空）：
-${JSON.stringify(candidates)}
-
-用户原话：
-“${userInputText}”
-
-任务：
-请基于用户原话和候选事件列表，判断用户意图，并决定要对指定事件执行何种操作：
-- 新增（add_event）
-- 修改（update_event）
-- 删除（delete_event）
-
-输出：严格返回一行 JSON 数组，元素为操作对象：
-- 新增事件示例：
-  {"action":"add_event","eventName":"会议","date":"2025-07-16","startTime":"14:00","endTime":"15:00","location":"地点","note":"备注"}
-- 修改事件示例：
-  {"action":"update_event","_id":"事件ID","startTime":"16:00","note":"新备注"}
-- 删除事件示例：
-  {"action":"delete_event","_id":"事件ID"}
-
-如果不需要任何操作，则返回空数组：[]。不要任何额外文字说明或解释。
-
-请用${langText}输出事件名、备注等内容。`;
-    logAI('[AI2完整提示词]\n' + ai2Prompt);
-    const ai2RequestBody = {
-      model: modelName,
-      messages: [
-        { role: 'system', content: ai2Prompt },
-        { role: 'user', content: userInputText }
-      ]
-    };
-    const thinkingMsg2 = createAnimatedMessage(getLocalizedText('thinkingMessage'), 'assistant-message thinking-message', true);
-    // 解析AI2响应
-    let ai2Result;
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(ai2RequestBody)
-      });
-      if (thinkingMsg2.parentNode) thinkingMsg2.parentNode.removeChild(thinkingMsg2);
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-      // 增强调试日志
-      console.log('[AI2原始响应]', content);
-      let jsonStr = content.trim();
-      jsonStr = jsonStr.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-      const startIdx = jsonStr.indexOf('[');
-      const endIdx = jsonStr.lastIndexOf(']');
-      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-        jsonStr = jsonStr.substring(startIdx, endIdx + 1);
+      const eventObj = JSON.parse(jsonStr);
+      
+      if (Object.keys(eventObj).length === 0) {
+        createAnimatedMessage('🤔 AIが意図を理解できませんでした。もう少し具体的に指示してください。', 'assistant-message');
+        return;
       }
-      ai2Result = JSON.parse(jsonStr);
-      console.log('[AI2解析后]', ai2Result);
-    } catch (err) {
-      if (thinkingMsg2.parentNode) thinkingMsg2.parentNode.removeChild(thinkingMsg2);
-      showChatError('第二次AI解析失败，请重试。');
-      return;
-    }
-    if (!ai2Result || !Array.isArray(ai2Result)) {
-      showChatError('AI未返回有效操作数组。');
-      return;
-    }
+      
+      const action = eventObj.action || 'add_event';
+      const userUId = localStorage.getItem("userUId");
+      const targetDate = extractDateFromText(text); // extractDateFromTextは既存の関数と仮定
 
-    const userUId = localStorage.getItem("userUId");
-    let hasAction = false;
-    ai2Result.forEach(op => {
-      if (op.action === 'add_event') {
-        // 兜底：fields为空时用op自身补全
-        const fields = Object.keys(op).length > 0 ? op : {};
-        const newEvent = {
-          eventName: fields.eventName || fields.activity || '新事件',
-          startDate: fields.date || todayStr,
-          endDate: fields.date || todayStr,
-          startTime: fields.startTime || '09:00',
-          endTime: fields.endTime || '09:00',
-          location: fields.location || '未設定',
-          note: fields.note || '',
-          color: '#1a73e8'
+      if (action === 'add_event') {
+        const cleanEvent = {
+          eventName: eventObj.eventName || '新しい予定',
+          startDate: targetDate || eventObj.startDate || todayStr,
+          endDate: targetDate || eventObj.endDate || eventObj.startDate || todayStr,
+          startTime: eventObj.startTime || '09:00',
+          endTime: eventObj.endTime || '10:00',
+          location: eventObj.location || '',
+          note: eventObj.note || '',
+          color: eventObj.color || '#1a73e8'
         };
-        showEventConfirm(newEvent, (confirmedEvent) => {
+        showEventConfirm(cleanEvent, (confirmedEvent) => {
           if (typeof window.onChatConfirmed === 'function') {
             window.onChatConfirmed(confirmedEvent);
           }
         });
-        hasAction = true;
-      } else if (op.action === 'update_event' && op._id) {
-        const eventToHandle = getEvents().find(ev => ev._id === op._id);
-        if (eventToHandle) {
-          const cleanEvent = { ...eventToHandle, ...op };
-          showUpdateEventConfirm(eventToHandle, cleanEvent, async (confirmedEvent) => {
-            try {
-              await updateEvent(userUId, eventToHandle._id, confirmedEvent);
-              await refreshCalendar();
-              createAnimatedMessage('✅ 事件已修改', 'assistant-message');
-            } catch (error) {
-              showChatError('事件修改失败: ' + error.message);
-            }
+      } else if (action === 'update_event' && eventObj._id) {
+        const originalEvent = getEvents().find(ev => ev._id === eventObj._id);
+        if (originalEvent) {
+          showUpdateEventConfirm(originalEvent, eventObj, async (confirmedEvent) => {
+            await updateEvent(userUId, eventObj._id, confirmedEvent);
+            await refreshCalendar();
+            createAnimatedMessage('✅ 予定を更新しました。', 'assistant-message');
           });
-          hasAction = true;
         }
-      } else if (op.action === 'delete_event' && op._id) {
-        const eventToHandle = getEvents().find(ev => ev._id === op._id);
-        if (eventToHandle) {
-          showDeleteEventConfirm(eventToHandle, async (confirmedEvent) => {
-            try {
-              await deleteEvent(userUId, eventToHandle._id);
-              await refreshCalendar();
-              createAnimatedMessage('🗑 事件已删除', 'assistant-message');
-            } catch (error) {
-              showChatError('事件删除失败: ' + error.message);
-            }
+      } else if (action === 'delete_event' && eventObj._id) {
+        const eventToDelete = getEvents().find(ev => ev._id === eventObj._id);
+        if (eventToDelete) {
+          showDeleteEventConfirm(eventToDelete, async () => {
+            await deleteEvent(userUId, eventObj._id);
+            await refreshCalendar();
+            createAnimatedMessage('🗑️ 予定を削除しました。', 'assistant-message');
           });
-          hasAction = true;
         }
       }
-    });
-    if (!hasAction) {
-      showChatError('未检测到可执行的事件操作。');
+    } catch (parseError) {
+      logAI('JSON parse failed-> ' + content + ' Error: ' + parseError.message, 'error');
+      // AIの返答がJSONでない場合は、そのまま表示するだけなので、エラー表示はしない
     }
+    } catch (err) {
+      // 移除思考中的消息（思考中メッセージを削除）
+      if (thinkingMsg && thinkingMsg.parentNode) {
+        thinkingMsg.parentNode.removeChild(thinkingMsg);
+      }
+      logAI(err.message, 'error');
+      showChatError('通信エラーが発生しました。API設定を確認してください。');
+    }
+
     if (!messageText) {
       userInput.value = '';
     }
