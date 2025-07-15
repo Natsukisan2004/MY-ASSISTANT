@@ -492,12 +492,14 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
     }
     window.__isProcessingChatMessage = true;
 
+<<<<<<< HEAD
+    const thinkingMsg = createAnimatedMessage(getLocalizedText('thinkingMessage'), 'assistant-message thinking-message', true);
+=======
     try {
       if (!messageText) {
         createAnimatedMessage("👤 " + text, 'user-message');
       }
 
-    try {
       const userUId = localStorage.getItem("userUId");
       if (userUId) {
         const freshEvents = await loadEvents(userUId);
@@ -506,9 +508,8 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
     } catch (error) {
       console.warn('⚠️ 刷新事件数据失败:', error);
     }
+>>>>>>> 272097047ea89ada6ef28ed3c38aced143fedcaa
 
-    const apiUrl = localStorage.getItem('openai_api_url') || 'https://openrouter.ai/api/v1/chat/completions';
-    const apiKey = localStorage.getItem('openai_api_key') || '';
     const modelName = localStorage.getItem('openai_model') || 'deepseek/deepseek-r1-0528:free';
     const todayStr = new Date().toISOString().slice(0, 10);
     const eventsContext = '...'; 
@@ -570,8 +571,30 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
       if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
         jsonStr = jsonStr.substring(startIdx, endIdx + 1);
       }
-      ai1Result = JSON.parse(jsonStr);
-      console.log('[AI1解析后]', ai1Result);
+<<<<<<< HEAD
+
+      const eventObj = JSON.parse(jsonStr);
+      
+      if (Object.keys(eventObj).length === 0) {
+        createAnimatedMessage('🤔 AIが意図を理解できませんでした。もう少し具体的に指示してください。', 'assistant-message');
+        return;
+      }
+      
+      const action = eventObj.action || 'add_event';
+      const userUId = localStorage.getItem("userUId");
+      const targetDate = extractDateFromText(text); // extractDateFromTextは既存の関数と仮定
+=======
+      
+      try {
+        ai1Result = JSON.parse(jsonStr);
+        console.log('[AI1解析后]', ai1Result);
+      } catch (parseError) {
+        console.error('❌ [调试] AI1 JSON解析失败:', parseError);
+        console.error('❌ [调试] AI1原始内容:', content);
+        console.error('❌ [调试] AI1处理后的JSON:', jsonStr);
+        showChatError('AI返回的数据格式有误，请重试。');
+        return;
+      }
     } catch (err) {
       if (thinkingMsg.parentNode) thinkingMsg.parentNode.removeChild(thinkingMsg);
       showChatError('第一次AI解析失败，请重试。');
@@ -647,9 +670,40 @@ ${JSON.stringify(candidates)}
       const endIdx = jsonStr.lastIndexOf(']');
       if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
         jsonStr = jsonStr.substring(startIdx, endIdx + 1);
+      } else if (startIdx !== -1 && endIdx === -1) {
+        // 处理不完整的JSON数组（缺少结束括号）
+        console.warn('⚠️ [调试] AI返回的JSON数组不完整，尝试修复');
+        jsonStr = jsonStr.substring(startIdx);
+        // 查找最后一个完整的对象
+        const lastBraceIdx = jsonStr.lastIndexOf('}');
+        if (lastBraceIdx !== -1) {
+          jsonStr = jsonStr.substring(0, lastBraceIdx + 1) + ']';
+          console.log('🔧 [调试] 修复后的JSON:', jsonStr);
+        }
       }
-      ai2Result = JSON.parse(jsonStr);
-      console.log('[AI2解析后]', ai2Result);
+      
+      try {
+        ai2Result = JSON.parse(jsonStr);
+        console.log('[AI2解析后]', ai2Result);
+      } catch (parseError) {
+        console.error('❌ [调试] JSON解析失败:', parseError);
+        console.error('❌ [调试] 原始内容:', content);
+        console.error('❌ [调试] 处理后的JSON:', jsonStr);
+        
+        // 如果是JSON格式错误，尝试重新请求
+        if (parseError instanceof SyntaxError) {
+          console.log('🔄 [调试] 检测到JSON格式错误，尝试重新请求AI');
+          showChatError('AI返回的数据格式有误，正在重试...');
+          // 这里可以添加重试逻辑，但为了简单起见，先提示用户重试
+          setTimeout(() => {
+            window.__isProcessingChatMessage = false;
+          }, 1000);
+          return;
+        }
+        
+        showChatError('AI返回的数据格式有误，请重试。');
+        return;
+      }
     } catch (err) {
       if (thinkingMsg2.parentNode) thinkingMsg2.parentNode.removeChild(thinkingMsg2);
       showChatError('第二次AI解析失败，请重试。');
@@ -659,28 +713,60 @@ ${JSON.stringify(candidates)}
       showChatError('AI未返回有效操作数组。');
       return;
     }
+>>>>>>> 272097047ea89ada6ef28ed3c38aced143fedcaa
 
-    const userUId = localStorage.getItem("userUId");
-    let hasAction = false;
-    ai2Result.forEach(op => {
-      if (op.action === 'add_event') {
-        // 兜底：fields为空时用op自身补全
-        const fields = Object.keys(op).length > 0 ? op : {};
-        const newEvent = {
-          eventName: fields.eventName || fields.activity || '新事件',
-          startDate: fields.date || todayStr,
-          endDate: fields.date || todayStr,
-          startTime: fields.startTime || '09:00',
-          endTime: fields.endTime || '09:00',
-          location: fields.location || '未設定',
-          note: fields.note || '',
-          color: '#1a73e8'
+      if (action === 'add_event') {
+        const cleanEvent = {
+          eventName: eventObj.eventName || '新しい予定',
+          startDate: targetDate || eventObj.startDate || todayStr,
+          endDate: targetDate || eventObj.endDate || eventObj.startDate || todayStr,
+          startTime: eventObj.startTime || '09:00',
+          endTime: eventObj.endTime || '10:00',
+          location: eventObj.location || '',
+          note: eventObj.note || '',
+          color: eventObj.color || '#1a73e8'
         };
-        showEventConfirm(newEvent, (confirmedEvent) => {
+<<<<<<< HEAD
+        showEventConfirm(cleanEvent, (confirmedEvent) => {
+=======
+        
+        // 添加调试日志
+        console.log('🔍 [调试] 准备显示事件确认弹窗:', newEvent);
+        console.log('🔍 [调试] showEventConfirm函数是否存在:', typeof showEventConfirm);
+        
+        // 临时解决方案：直接添加事件而不显示确认弹窗
+        const autoConfirm = false; // 设置为false恢复确认弹窗
+        
+        if (autoConfirm) {
+          console.log('🔍 [调试] 自动确认模式，直接添加事件');
+>>>>>>> 272097047ea89ada6ef28ed3c38aced143fedcaa
           if (typeof window.onChatConfirmed === 'function') {
-            window.onChatConfirmed(confirmedEvent);
+            window.onChatConfirmed(newEvent);
+            createAnimatedMessage('✅ 事件已自动添加', 'assistant-message');
           }
+<<<<<<< HEAD
         });
+      } else if (action === 'update_event' && eventObj._id) {
+        const originalEvent = getEvents().find(ev => ev._id === eventObj._id);
+        if (originalEvent) {
+          showUpdateEventConfirm(originalEvent, eventObj, async (confirmedEvent) => {
+            await updateEvent(userUId, eventObj._id, confirmedEvent);
+            await refreshCalendar();
+            createAnimatedMessage('✅ 予定を更新しました。', 'assistant-message');
+=======
+        } else {
+          showEventConfirm(newEvent, (confirmedEvent) => {
+            console.log('🔍 [调试] 事件确认回调被调用:', confirmedEvent);
+            if (typeof window.onChatConfirmed === 'function') {
+              console.log('🔍 [调试] 调用window.onChatConfirmed');
+              window.onChatConfirmed(confirmedEvent);
+            } else {
+              console.error('❌ [调试] window.onChatConfirmed函数不存在');
+            }
+          });
+        }
+        
+        console.log('🔍 [调试] showEventConfirm调用完成');
         hasAction = true;
       } else if (op.action === 'update_event' && op._id) {
         const eventToHandle = getEvents().find(ev => ev._id === op._id);
@@ -694,23 +780,27 @@ ${JSON.stringify(candidates)}
             } catch (error) {
               showChatError('事件修改失败: ' + error.message);
             }
+>>>>>>> 272097047ea89ada6ef28ed3c38aced143fedcaa
           });
-          hasAction = true;
         }
-      } else if (op.action === 'delete_event' && op._id) {
-        const eventToHandle = getEvents().find(ev => ev._id === op._id);
-        if (eventToHandle) {
-          showDeleteEventConfirm(eventToHandle, async (confirmedEvent) => {
-            try {
-              await deleteEvent(userUId, eventToHandle._id);
-              await refreshCalendar();
-              createAnimatedMessage('🗑 事件已删除', 'assistant-message');
-            } catch (error) {
-              showChatError('事件删除失败: ' + error.message);
-            }
+      } else if (action === 'delete_event' && eventObj._id) {
+        const eventToDelete = getEvents().find(ev => ev._id === eventObj._id);
+        if (eventToDelete) {
+          showDeleteEventConfirm(eventToDelete, async () => {
+            await deleteEvent(userUId, eventObj._id);
+            await refreshCalendar();
+            createAnimatedMessage('🗑️ 予定を削除しました。', 'assistant-message');
           });
-          hasAction = true;
         }
+      }
+    } catch (parseError) {
+      logAI('JSON parse failed-> ' + content + ' Error: ' + parseError.message, 'error');
+      // AIの返答がJSONでない場合は、そのまま表示するだけなので、エラー表示はしない
+    }
+    } catch (err) {
+      // 移除思考中的消息（思考中メッセージを削除）
+      if (thinkingMsg && thinkingMsg.parentNode) {
+        thinkingMsg.parentNode.removeChild(thinkingMsg);
       }
       logAI(err.message, 'error');
       showChatError('通信エラーが発生しました。API設定を確認してください。');
