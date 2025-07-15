@@ -261,8 +261,6 @@ const searchInput = document.getElementById('searchInput');
 
   // チャットAIからの確認イベント処理
   window.onChatConfirmed = async (confirmedEvent) => {
-    console.log('🔍 [调试] onChatConfirmed被调用:', confirmedEvent);
-    
     const userUId = localStorage.getItem("userUId");
     if (!userUId) {
       alert("ログインしてください");
@@ -270,13 +268,9 @@ const searchInput = document.getElementById('searchInput');
     }
 
     try {
-      // 移除直接修改本地数组的代码，避免数据不一致
-      // const events = getEvents();
-      // events.push(confirmedEvent);
-      
-      console.log('🔍 [调试] 开始保存事件到Firebase');
+      const events = getEvents();
+      events.push(confirmedEvent);
       await saveEvent(userUId, confirmedEvent);
-      console.log('🔍 [调试] 事件保存成功，开始刷新日历');
       await refreshCalendar();
       console.log('✅ AIからの予定が保存されました:', confirmedEvent);
     } catch (error) {

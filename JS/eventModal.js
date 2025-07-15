@@ -103,119 +103,37 @@ export function showDeleteConfirm(event, onConfirm) {
 
 // AIが提案したイベントをユーザーが確認するモーダル
 export function showEventConfirm(eventObj, onConfirm) {
-  console.log('🔍 [调试] showEventConfirm函数被调用:', eventObj);
-  
   const modal = document.createElement('div');
   modal.className = 'event-detail-popup';
-  modal.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  `;
-  
   let title = 'このイベントを追加しますか？';
   if (eventObj.action === 'update_event') title = 'このイベントを修正しますか？';
   if (eventObj.action === 'delete_event') title = 'このイベントを削除しますか？';
-  
-  console.log('🔍 [调试] 创建弹窗元素，标题:', title);
-  
   modal.innerHTML = `
-    <div class="event-detail-modal" style="
-      background: white;
-      padding: 24px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 400px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-      z-index: 10000;
-    ">
-      <h3 style="margin: 0 0 16px 0; color: #1a73e8; font-size: 18px;">${title}</h3>
+    <div class="event-detail-modal">
+      <h3>${title}</h3>
       <p><strong>イベント名:</strong> ${eventObj.eventName || ''}</p>
       <p><strong>開始日:</strong> ${eventObj.startDate || ''}</p>
       <p><strong>終了日:</strong> ${eventObj.endDate || eventObj.startDate || ''}</p>
       <p><strong>時間:</strong> ${eventObj.startTime || ''} ～ ${eventObj.endTime || ''}</p>
       <p><strong>場所:</strong> ${eventObj.location || ''}</p>
       <p><strong>メモ:</strong> ${eventObj.note || ''}</p>
-      <div style="display: flex; gap: 12px; margin-top: 20px; justify-content: flex-end;">
-        <button id="confirmAddEventBtn" style="
-          padding: 8px 16px;
-          border: none;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 14px;
-          background-color: #4caf50;
-          color: white;
-        ">${eventObj.action === 'delete_event' ? '削除' : eventObj.action === 'update_event' ? '修正' : '追加'}</button>
-        <button id="cancelAddEventBtn" style="
-          padding: 8px 16px;
-          border: none;
-          border-radius: 6px;
-          cursor: pointer;
-          font-size: 14px;
-          background-color: #f5f5f5;
-          color: #666;
-        ">キャンセル</button>
-      </div>
+      <button id="confirmAddEventBtn">${eventObj.action === 'delete_event' ? '削除' : eventObj.action === 'update_event' ? '修正' : '追加'}</button>
+      <button id="cancelAddEventBtn">キャンセル</button>
     </div>
   `;
-  
-  console.log('🔍 [调试] 将弹窗添加到DOM');
   document.body.appendChild(modal);
-  
-  // 强制重绘
-  setTimeout(() => {
-    modal.style.display = 'flex';
-  }, 10);
-  
-  // 检查弹窗是否成功创建
-  setTimeout(() => {
-    const createdModal = document.querySelector('.event-detail-popup');
-    if (createdModal) {
-      console.log('✅ [调试] 弹窗成功创建并显示');
-      console.log('🔍 [调试] 弹窗元素:', createdModal);
-      console.log('🔍 [调试] 弹窗可见性:', window.getComputedStyle(createdModal).display);
-    } else {
-      console.error('❌ [调试] 弹窗创建失败');
-    }
-  }, 100);
-  
   const confirmBtn = modal.querySelector('#confirmAddEventBtn');
   const cancelBtn = modal.querySelector('#cancelAddEventBtn');
-  
-  console.log('🔍 [调试] 绑定事件监听器');
-  
   confirmBtn.addEventListener('click', () => {
-    console.log('🔍 [调试] 确认按钮被点击');
     if (typeof onConfirm === 'function') onConfirm(eventObj);
-    if (document.body.contains(modal)) {
-      document.body.removeChild(modal);
-    }
+    document.body.removeChild(modal);
   });
-  
   cancelBtn.addEventListener('click', () => {
-    console.log('🔍 [调试] 取消按钮被点击');
-    if (document.body.contains(modal)) {
-      document.body.removeChild(modal);
-    }
+    document.body.removeChild(modal);
   });
-  
   modal.addEventListener('click', (e) => {
-    if (e.target === modal) {
-      console.log('🔍 [调试] 点击弹窗背景关闭');
-      if (document.body.contains(modal)) {
-        document.body.removeChild(modal);
-      }
-    }
+    if (e.target === modal) document.body.removeChild(modal);
   });
-  
-  console.log('🔍 [调试] showEventConfirm函数执行完成');
 }
 
 // 修改事件确认弹窗 - 显示变更前后对比

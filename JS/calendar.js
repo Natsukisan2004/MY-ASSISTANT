@@ -159,44 +159,92 @@ function renderEvents() {
       return dateStr >= start && dateStr <= end;
     });
 
+    eventsOnThisDay.sort((a, b) => {
+      const aIsMultiDay = (a.startDate !== (a.endDate || a.startDate));
+      const bIsMultiDay = (b.startDate !== (b.endDate || b.startDate));
+
+      // 1. 複数日イベントを単日イベントより常に優先する
+      if (aIsMultiDay && !bIsMultiDay) return -1;
+      if (!aIsMultiDay && bIsMultiDay) return 1;
+
+      // 2. 複数日イベント同士の場合、開始日が早い順に並べる
+      if (aIsMultiDay && bIsMultiDay) {
+        const aStart = new Date(a.startDate);
+        const bStart = new Date(b.startDate);
+        return aStart - bStart;
+      }
+      
+      // 3. 単日イベント同士の場合、開始時刻が早い順に並べる
+      if (!aIsMultiDay && !bIsMultiDay) {
+        const aTime = a.startTime || '00:00';
+        const bTime = b.startTime || '00:00';
+        if (aTime < bTime) return -1;
+        if (aTime > bTime) return 1;
+      }
+
+      return 0;
+    });
+
+    let multiDayOffset = 4; // 帯イベントの垂直位置の初期値 (px)
+    const singleDayEvents = []; // 単日イベントを一時的に保持する配列
+
+    // 最初に複数日イベントだけを処理
     eventsOnThisDay.forEach(event => {
-      const eventDiv = document.createElement('div');
-      const startDateStr = formatDate(new Date(event.startDate));
-      const endDateStr = formatDate(new Date(event.endDate || event.startDate));
-      const isMultiDay = startDateStr !== endDateStr;
+      const isMultiDay = (event.startDate !== (event.endDate || event.startDate));
 
       if (isMultiDay) {
+        const eventDiv = document.createElement('div');
         eventDiv.classList.add('multi-day-event-segment');
+        
+        // 帯イベントの垂直位置を動的に設定
+        eventDiv.style.top = `${multiDayOffset}px`;
+        multiDayOffset += 28; // 次の帯イベントのために高さをずらす (25pxの高さ + 3pxのマージン)
+
+        const startDateStr = formatDate(new Date(event.startDate));
+        const endDateStr = formatDate(new Date(event.endDate));
         if (dateStr === startDateStr) {
           eventDiv.classList.add('event-starts');
           eventDiv.textContent = event.eventName;
         } else if (dateStr === endDateStr) {
           eventDiv.classList.add('event-ends');
-          eventDiv.innerHTML = '&nbsp;';
         } else {
           eventDiv.classList.add('event-continues');
-          eventDiv.innerHTML = '&nbsp;';
         }
-      } else {
-        eventDiv.classList.add('single-day-event');
-        eventDiv.textContent = event.eventName;
-      }
 
+        // 共通のスタイルとイベントリスナー
+        eventDiv.style.backgroundColor = event.color || '#1a73e8';
+        eventDiv.draggable = true;
+        eventDiv.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', event._id));
+        eventDiv.addEventListener('click', (e) => { e.stopPropagation(); showEventDetails(event, refreshCalendar); });
+        
+        eventsContainer.appendChild(eventDiv);
+
+      } else {
+        // 単日イベントは後で処理するために配列に保存
+        singleDayEvents.push(event);
+      }
+    });
+
+    // 複数日イベントが占有した高さ分、コンテナにpadding-topを設定
+    if (multiDayOffset > 4) {
+      eventsContainer.style.paddingTop = `${multiDayOffset}px`;
+    }
+
+    // 次に単日イベントを処理
+    singleDayEvents.forEach(event => {
+      const eventDiv = document.createElement('div');
+      eventDiv.classList.add('single-day-event');
+      eventDiv.textContent = event.eventName;
+      
+      // 共通のスタイルとイベントリスナー
       eventDiv.style.backgroundColor = event.color || '#1a73e8';
       eventDiv.draggable = true;
-
-      eventDiv.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', event._id);
-        e.dataTransfer.effectAllowed = 'move';
-      });
-
-      eventDiv.addEventListener('click', (e) => {
-        e.stopPropagation();
-        showEventDetails(event, refreshCalendar);
-      });
-
+      eventDiv.addEventListener('dragstart', (e) => e.dataTransfer.setData('text/plain', event._id));
+      eventDiv.addEventListener('click', (e) => { e.stopPropagation(); showEventDetails(event, refreshCalendar); });
+      
       eventsContainer.appendChild(eventDiv);
     });
+       // ▲▲▲【修正ここまで】▲▲▲
   });
 }
 

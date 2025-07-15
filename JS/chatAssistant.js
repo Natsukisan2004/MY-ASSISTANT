@@ -485,30 +485,11 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
     const text = messageText || userInput.value.trim();
     if (!text) return;
 
-    // 添加防重复处理机制
-    if (window.__isProcessingChatMessage) {
-      console.log('🔍 [调试] 正在处理中，跳过重复请求');
-      return;
+    if (!messageText) {
+      createAnimatedMessage("👤 " + text, 'user-message');
     }
-    window.__isProcessingChatMessage = true;
 
-<<<<<<< HEAD
     const thinkingMsg = createAnimatedMessage(getLocalizedText('thinkingMessage'), 'assistant-message thinking-message', true);
-=======
-    try {
-      if (!messageText) {
-        createAnimatedMessage("👤 " + text, 'user-message');
-      }
-
-      const userUId = localStorage.getItem("userUId");
-      if (userUId) {
-        const freshEvents = await loadEvents(userUId);
-        setEvents(freshEvents);
-      }
-    } catch (error) {
-      console.warn('⚠️ 刷新事件数据失败:', error);
-    }
->>>>>>> 272097047ea89ada6ef28ed3c38aced143fedcaa
 
     const modelName = localStorage.getItem('openai_model') || 'deepseek/deepseek-r1-0528:free';
     const todayStr = new Date().toISOString().slice(0, 10);
@@ -571,7 +552,6 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
       if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
         jsonStr = jsonStr.substring(startIdx, endIdx + 1);
       }
-<<<<<<< HEAD
 
       const eventObj = JSON.parse(jsonStr);
       
@@ -583,137 +563,6 @@ export function initChatAssistant({ micBtnId, inputId, chatFormId, messagesId })
       const action = eventObj.action || 'add_event';
       const userUId = localStorage.getItem("userUId");
       const targetDate = extractDateFromText(text); // extractDateFromTextは既存の関数と仮定
-=======
-      
-      try {
-        ai1Result = JSON.parse(jsonStr);
-        console.log('[AI1解析后]', ai1Result);
-      } catch (parseError) {
-        console.error('❌ [调试] AI1 JSON解析失败:', parseError);
-        console.error('❌ [调试] AI1原始内容:', content);
-        console.error('❌ [调试] AI1处理后的JSON:', jsonStr);
-        showChatError('AI返回的数据格式有误，请重试。');
-        return;
-      }
-    } catch (err) {
-      if (thinkingMsg.parentNode) thinkingMsg.parentNode.removeChild(thinkingMsg);
-      showChatError('第一次AI解析失败，请重试。');
-      return;
-    }
-    if (!ai1Result || !ai1Result.date) {
-      showChatError('AI未能正确识别您的意图，请补充关键信息。');
-      return;
-    }
-
-    // 本地查找当天所有事件
-    const candidates = getEvents().filter(ev => ev.startDate === ai1Result.date);
-
-    // === 第二次AI调用：结合候选事件做决策 ===
-    logAI(`[AI2事件决策] 使用模型: ${modelName}, API: ${apiUrl}`);
-    // 多语言支持
-    const langMap = { zh: '中文', ja: '日语', en: '英语' };
-    const userLang = getCurrentLanguage();
-    const langText = langMap[userLang] || '中文';
-    const ai2Prompt = `你是一个日历事件决策助手。
-今天是 ${todayStr}。
-以下是已提取的目标日期：
-  日期：${ai1Result.date}
-
-后端已根据这个日期查询到以下候选事件（JSON 数组；若无匹配，则数组为空）：
-${JSON.stringify(candidates)}
-
-用户原话：
-“${userInputText}”
-
-任务：
-请基于用户原话和候选事件列表，判断用户意图，并决定要对指定事件执行何种操作：
-- 新增（add_event）
-- 修改（update_event）
-- 删除（delete_event）
-
-输出：严格返回一行 JSON 数组，元素为操作对象：
-- 新增事件示例：
-  {"action":"add_event","eventName":"会议","date":"2025-07-16","startTime":"14:00","endTime":"15:00","location":"地点","note":"备注"}
-- 修改事件示例：
-  {"action":"update_event","_id":"事件ID","startTime":"16:00","note":"新备注"}
-- 删除事件示例：
-  {"action":"delete_event","_id":"事件ID"}
-
-如果不需要任何操作，则返回空数组：[]。不要任何额外文字说明或解释。
-
-请用${langText}输出事件名、备注等内容。`;
-    logAI('[AI2完整提示词]\n' + ai2Prompt);
-    const ai2RequestBody = {
-      model: modelName,
-      messages: [
-        { role: 'system', content: ai2Prompt },
-        { role: 'user', content: userInputText }
-      ]
-    };
-    const thinkingMsg2 = createAnimatedMessage(getLocalizedText('thinkingMessage'), 'assistant-message thinking-message', true);
-    // 解析AI2响应
-    let ai2Result;
-    try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(ai2RequestBody)
-      });
-      if (thinkingMsg2.parentNode) thinkingMsg2.parentNode.removeChild(thinkingMsg2);
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-      // 增强调试日志
-      console.log('[AI2原始响应]', content);
-      let jsonStr = content.trim();
-      jsonStr = jsonStr.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-      const startIdx = jsonStr.indexOf('[');
-      const endIdx = jsonStr.lastIndexOf(']');
-      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-        jsonStr = jsonStr.substring(startIdx, endIdx + 1);
-      } else if (startIdx !== -1 && endIdx === -1) {
-        // 处理不完整的JSON数组（缺少结束括号）
-        console.warn('⚠️ [调试] AI返回的JSON数组不完整，尝试修复');
-        jsonStr = jsonStr.substring(startIdx);
-        // 查找最后一个完整的对象
-        const lastBraceIdx = jsonStr.lastIndexOf('}');
-        if (lastBraceIdx !== -1) {
-          jsonStr = jsonStr.substring(0, lastBraceIdx + 1) + ']';
-          console.log('🔧 [调试] 修复后的JSON:', jsonStr);
-        }
-      }
-      
-      try {
-        ai2Result = JSON.parse(jsonStr);
-        console.log('[AI2解析后]', ai2Result);
-      } catch (parseError) {
-        console.error('❌ [调试] JSON解析失败:', parseError);
-        console.error('❌ [调试] 原始内容:', content);
-        console.error('❌ [调试] 处理后的JSON:', jsonStr);
-        
-        // 如果是JSON格式错误，尝试重新请求
-        if (parseError instanceof SyntaxError) {
-          console.log('🔄 [调试] 检测到JSON格式错误，尝试重新请求AI');
-          showChatError('AI返回的数据格式有误，正在重试...');
-          // 这里可以添加重试逻辑，但为了简单起见，先提示用户重试
-          setTimeout(() => {
-            window.__isProcessingChatMessage = false;
-          }, 1000);
-          return;
-        }
-        
-        showChatError('AI返回的数据格式有误，请重试。');
-        return;
-      }
-    } catch (err) {
-      if (thinkingMsg2.parentNode) thinkingMsg2.parentNode.removeChild(thinkingMsg2);
-      showChatError('第二次AI解析失败，请重试。');
-      return;
-    }
-    if (!ai2Result || !Array.isArray(ai2Result)) {
-      showChatError('AI未返回有效操作数组。');
-      return;
-    }
->>>>>>> 272097047ea89ada6ef28ed3c38aced143fedcaa
 
       if (action === 'add_event') {
         const cleanEvent = {
@@ -726,25 +575,10 @@ ${JSON.stringify(candidates)}
           note: eventObj.note || '',
           color: eventObj.color || '#1a73e8'
         };
-<<<<<<< HEAD
         showEventConfirm(cleanEvent, (confirmedEvent) => {
-=======
-        
-        // 添加调试日志
-        console.log('🔍 [调试] 准备显示事件确认弹窗:', newEvent);
-        console.log('🔍 [调试] showEventConfirm函数是否存在:', typeof showEventConfirm);
-        
-        // 临时解决方案：直接添加事件而不显示确认弹窗
-        const autoConfirm = false; // 设置为false恢复确认弹窗
-        
-        if (autoConfirm) {
-          console.log('🔍 [调试] 自动确认模式，直接添加事件');
->>>>>>> 272097047ea89ada6ef28ed3c38aced143fedcaa
           if (typeof window.onChatConfirmed === 'function') {
-            window.onChatConfirmed(newEvent);
-            createAnimatedMessage('✅ 事件已自动添加', 'assistant-message');
+            window.onChatConfirmed(confirmedEvent);
           }
-<<<<<<< HEAD
         });
       } else if (action === 'update_event' && eventObj._id) {
         const originalEvent = getEvents().find(ev => ev._id === eventObj._id);
@@ -753,34 +587,6 @@ ${JSON.stringify(candidates)}
             await updateEvent(userUId, eventObj._id, confirmedEvent);
             await refreshCalendar();
             createAnimatedMessage('✅ 予定を更新しました。', 'assistant-message');
-=======
-        } else {
-          showEventConfirm(newEvent, (confirmedEvent) => {
-            console.log('🔍 [调试] 事件确认回调被调用:', confirmedEvent);
-            if (typeof window.onChatConfirmed === 'function') {
-              console.log('🔍 [调试] 调用window.onChatConfirmed');
-              window.onChatConfirmed(confirmedEvent);
-            } else {
-              console.error('❌ [调试] window.onChatConfirmed函数不存在');
-            }
-          });
-        }
-        
-        console.log('🔍 [调试] showEventConfirm调用完成');
-        hasAction = true;
-      } else if (op.action === 'update_event' && op._id) {
-        const eventToHandle = getEvents().find(ev => ev._id === op._id);
-        if (eventToHandle) {
-          const cleanEvent = { ...eventToHandle, ...op };
-          showUpdateEventConfirm(eventToHandle, cleanEvent, async (confirmedEvent) => {
-            try {
-              await updateEvent(userUId, eventToHandle._id, confirmedEvent);
-              await refreshCalendar();
-              createAnimatedMessage('✅ 事件已修改', 'assistant-message');
-            } catch (error) {
-              showChatError('事件修改失败: ' + error.message);
-            }
->>>>>>> 272097047ea89ada6ef28ed3c38aced143fedcaa
           });
         }
       } else if (action === 'delete_event' && eventObj._id) {
@@ -809,9 +615,6 @@ ${JSON.stringify(candidates)}
     if (!messageText) {
       userInput.value = '';
     }
-    
-    // 重置处理标志
-    window.__isProcessingChatMessage = false;
   }
 
   // 剪贴板粘贴图片功能（クリップボードからの画像貼り付け機能）
